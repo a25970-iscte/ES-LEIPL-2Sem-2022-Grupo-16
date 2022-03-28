@@ -13,7 +13,7 @@ Joao Raposo 93335
 **Projecto:** ZXing ( https://github.com/zxing/zxing )
 
 # Estado do Projecto: #
-## Fase 1 Implementada.
+- Fase 1 Implementada.
   - [x] Importação Projecto (ZXing) no IDE  (Eclipse)
   - [x] Implementação do projecto no GitHub
   - [x] Configuração de Maven, JAVADOC e JUnit
