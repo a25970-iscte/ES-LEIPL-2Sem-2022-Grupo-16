@@ -13,7 +13,7 @@ Joao Raposo 93335
 
 # Estado do Projecto (ZXing): #
 ## Fase 1 Implementada.
-  - Importação Projecto (ZXing) no IDE  (Eclipse) [x]
+  - [x] Importação Projecto (ZXing) no IDE  (Eclipse) [x]
   - Implementação do projecto no GitHub [x]
   - Configuração de Maven, JAVADOC e JUnit [x]
   - Realização de primeiros testes de cobertura [x]
