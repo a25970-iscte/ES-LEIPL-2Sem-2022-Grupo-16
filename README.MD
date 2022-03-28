@@ -1,6 +1,6 @@
 
 # ES-LEIPL-2Sem-2022-Grupo-16
-## Projecto: ZXing
+#### Projecto: ZXing
 
 -----------------------------------
 - David Gaspar 25970
