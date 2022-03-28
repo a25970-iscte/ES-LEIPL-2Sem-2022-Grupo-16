@@ -2,7 +2,7 @@
 # ES-LEIPL-2Sem-2022-Grupo-16
 
 -----------------------------------
-** Membros: **
+**Membros:**
 ```
 David Gaspar 25970
 Joao Gamito 73315
