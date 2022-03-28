@@ -1,6 +1,6 @@
 
 -----------------------------------
-# ES-LEIPL-2Sem-2022-Grupo-16
+# ES-LEIPL-2Sem-2022-Grupo-16 #
 **Membros:**
 ```
 David Gaspar 25970
@@ -11,7 +11,7 @@ Rodrigo Santos 93073
 Joao Raposo 93335
 ```
 
-# Estado do Projecto (ZXing):
+# Estado do Projecto (ZXing): #
 ## Fase 1 Implementada.
   - Importação Projecto (ZXing) no IDE  (Eclipse)
   - Implementação do projecto no GitHub
