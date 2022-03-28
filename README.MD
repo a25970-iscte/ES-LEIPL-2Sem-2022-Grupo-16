@@ -13,11 +13,11 @@ Joao Raposo 93335
 
 # Estado do Projecto (ZXing): #
 ## Fase 1 Implementada.
-  - Importação Projecto (ZXing) no IDE  (Eclipse)
-  - Implementação do projecto no GitHub
-  - Configuração de Maven, JAVADOC e JUnit
-  - Realização de primeiros testes de cobertura
-  - Metodologia Agile (SCRUM)
+  - Importação Projecto (ZXing) no IDE  (Eclipse) [x]
+  - Implementação do projecto no GitHub [x]
+  - Configuração de Maven, JAVADOC e JUnit [x]
+  - Realização de primeiros testes de cobertura [x]
+  - Metodologia Agile (SCRUM) [x]
   
 ## Fase 2 A implementar ( 2 sprints )
   - Extracção métricas qualidade do código
