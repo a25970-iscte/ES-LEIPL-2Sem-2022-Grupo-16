@@ -10,6 +10,7 @@ Guilherme Ferreira 78727
 Rodrigo Santos 93073
 Joao Raposo 93335
 ```
+**Projecto:** ZXing ( https://github.com/zxing/zxing )
 
 # Estado do Projecto (ZXing): #
 ## Fase 1 Implementada.
