@@ -21,9 +21,9 @@ Joao Raposo 93335
   - [x] Metodologia Agile (SCRUM)
   
 ### Fase 2: *A implementar ( 2 sprints )*
-  - [ ] Extracção métricas qualidade do código
-  - [ ] Registo de code-smells em Excel
-  - [ ] Análise de métricas de código
+  - [x] Extracção métricas qualidade do código
+  - [x] Registo de code-smells em Excel
+  - [x] Análise de métricas de código
   - [ ] Dissecar code-smells
   - [ ] Execução de testes
   - [ ] Criação do JAVADOC final
