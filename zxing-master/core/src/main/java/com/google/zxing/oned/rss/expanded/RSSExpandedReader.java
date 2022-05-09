@@ -422,19 +422,8 @@ private static boolean allFoundBoolean(Iterable<ExpandedPair> pairs, ExpandedRow
       isOddPattern = !isOddPattern;
     }
 
-    FinderPattern pattern;
-
-    boolean keepFinding = true;
-    int forcedOffset = -1;
-    do {
-      this.findNextPair(row, previousPairs, forcedOffset);
-      pattern = parseFoundFinderPattern(row, rowNumber, isOddPattern);
-      if (pattern == null) {
-        forcedOffset = getNextSecondBar(row, this.startEnd[0]);
-      } else {
-        keepFinding = false;
-      }
-    } while (keepFinding);
+    FinderPattern pattern = patternFinderBuilder(row, previousPairs, rowNumber, isOddPattern);
+	
 
     // When stacked symbol is split over multiple rows, there's no way to guess if this pair can be last or not.
     // boolean mayBeLast = checkPairSequence(previousPairs, pattern);
@@ -453,6 +442,23 @@ private static boolean allFoundBoolean(Iterable<ExpandedPair> pairs, ExpandedRow
     }
     return new ExpandedPair(leftChar, rightChar, pattern);
   }
+
+private FinderPattern patternFinderBuilder(BitArray row, List<ExpandedPair> previousPairs, int rowNumber,
+		boolean isOddPattern) throws NotFoundException {
+	FinderPattern pattern;
+	boolean keepFinding = true;
+	int forcedOffset = -1;
+	do {
+		this.findNextPair(row, previousPairs, forcedOffset);
+		pattern = parseFoundFinderPattern(row, rowNumber, isOddPattern);
+		if (pattern == null) {
+			forcedOffset = getNextSecondBar(row, this.startEnd[0]);
+		} else {
+			keepFinding = false;
+		}
+	} while (keepFinding);
+	return pattern;
+}
 
   private void findNextPair(BitArray row, List<ExpandedPair> previousPairs, int forcedOffset)
       throws NotFoundException {
