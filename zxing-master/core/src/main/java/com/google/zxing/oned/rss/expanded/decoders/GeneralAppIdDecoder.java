@@ -403,28 +403,33 @@ private char eightBitValueExtract(int pos) throws FormatException {
       return new DecodedChar(pos + 6, (char) (sixBitValue + 33));
     }
 
-    char c;
-    switch (sixBitValue) {
-      case 58:
-        c = '*';
-        break;
-      case 59:
-        c = ',';
-        break;
-      case 60:
-        c = '-';
-        break;
-      case 61:
-        c = '.';
-        break;
-      case 62:
-        c = '/';
-        break;
-      default:
-        throw new IllegalStateException("Decoding invalid alphanumeric value: " + sixBitValue);
-    }
-    return new DecodedChar(pos + 6, c);
+    char c = cRefactor(sixBitValue);
+	return new DecodedChar(pos + 6, c);
   }
+
+private char cRefactor(int sixBitValue) throws IllegalStateException {
+	char c;
+	switch (sixBitValue) {
+	case 58:
+		c = '*';
+		break;
+	case 59:
+		c = ',';
+		break;
+	case 60:
+		c = '-';
+		break;
+	case 61:
+		c = '.';
+		break;
+	case 62:
+		c = '/';
+		break;
+	default:
+		throw new IllegalStateException("Decoding invalid alphanumeric value: " + sixBitValue);
+	}
+	return c;
+}
 
   private boolean isAlphaTo646ToAlphaLatch(int pos) {
     if (pos + 1 > this.information.getSize()) {
