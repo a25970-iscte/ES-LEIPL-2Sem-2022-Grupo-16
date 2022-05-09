@@ -320,27 +320,32 @@ public final class RSSExpandedReader extends AbstractRSSReader {
   // Returns true when one of the rows already contains all the pairs
   private static boolean isPartialRow(Iterable<ExpandedPair> pairs, Iterable<ExpandedRow> rows) {
     for (ExpandedRow r : rows) {
-      boolean allFound = true;
-      for (ExpandedPair p : pairs) {
-        boolean found = false;
-        for (ExpandedPair pp : r.getPairs()) {
-          if (p.equals(pp)) {
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          allFound = false;
-          break;
-        }
-      }
-      if (allFound) {
+      boolean allFound = allFoundBoolean(pairs, r);
+	if (allFound) {
         // the row 'r' contain all the pairs from 'pairs'
         return true;
       }
     }
     return false;
   }
+
+private static boolean allFoundBoolean(Iterable<ExpandedPair> pairs, ExpandedRow r) {
+	boolean allFound = true;
+	for (ExpandedPair p : pairs) {
+		boolean found = false;
+		for (ExpandedPair pp : r.getPairs()) {
+			if (p.equals(pp)) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			allFound = false;
+			break;
+		}
+	}
+	return allFound;
+}
 
   // Only used for unit testing
   List<ExpandedRow> getRows() {

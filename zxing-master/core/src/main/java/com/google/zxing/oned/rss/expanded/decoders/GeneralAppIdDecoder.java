@@ -291,77 +291,82 @@ final class GeneralAppIdDecoder {
       return new DecodedChar(pos + 7, (char) (sevenBitValue + 7));
     }
 
-    int eightBitValue = extractNumericValueFromBitArray(pos, 8);
-    char c;
-    switch (eightBitValue) {
-      case 232:
-        c = '!';
-        break;
-      case 233:
-        c = '"';
-        break;
-      case 234:
-        c = '%';
-        break;
-      case 235:
-        c = '&';
-        break;
-      case 236:
-        c = '\'';
-        break;
-      case 237:
-        c = '(';
-        break;
-      case 238:
-        c = ')';
-        break;
-      case 239:
-        c = '*';
-        break;
-      case 240:
-        c = '+';
-        break;
-      case 241:
-        c = ',';
-        break;
-      case 242:
-        c = '-';
-        break;
-      case 243:
-        c = '.';
-        break;
-      case 244:
-        c = '/';
-        break;
-      case 245:
-        c = ':';
-        break;
-      case 246:
-        c = ';';
-        break;
-      case 247:
-        c = '<';
-        break;
-      case 248:
-        c = '=';
-        break;
-      case 249:
-        c = '>';
-        break;
-      case 250:
-        c = '?';
-        break;
-      case 251:
-        c = '_';
-        break;
-      case 252:
-        c = ' ';
-        break;
-      default:
-        throw FormatException.getFormatInstance();
-    }
-    return new DecodedChar(pos + 8, c);
+    char c = eightBitValueExtract(pos);
+	return new DecodedChar(pos + 8, c);
   }
+
+private char eightBitValueExtract(int pos) throws FormatException {
+	int eightBitValue = extractNumericValueFromBitArray(pos, 8);
+	char c;
+	switch (eightBitValue) {
+	case 232:
+		c = '!';
+		break;
+	case 233:
+		c = '"';
+		break;
+	case 234:
+		c = '%';
+		break;
+	case 235:
+		c = '&';
+		break;
+	case 236:
+		c = '\'';
+		break;
+	case 237:
+		c = '(';
+		break;
+	case 238:
+		c = ')';
+		break;
+	case 239:
+		c = '*';
+		break;
+	case 240:
+		c = '+';
+		break;
+	case 241:
+		c = ',';
+		break;
+	case 242:
+		c = '-';
+		break;
+	case 243:
+		c = '.';
+		break;
+	case 244:
+		c = '/';
+		break;
+	case 245:
+		c = ':';
+		break;
+	case 246:
+		c = ';';
+		break;
+	case 247:
+		c = '<';
+		break;
+	case 248:
+		c = '=';
+		break;
+	case 249:
+		c = '>';
+		break;
+	case 250:
+		c = '?';
+		break;
+	case 251:
+		c = '_';
+		break;
+	case 252:
+		c = ' ';
+		break;
+	default:
+		throw FormatException.getFormatInstance();
+	}
+	return c;
+}
 
   private boolean isStillAlpha(int pos) {
     if (pos + 5 > this.information.getSize()) {
