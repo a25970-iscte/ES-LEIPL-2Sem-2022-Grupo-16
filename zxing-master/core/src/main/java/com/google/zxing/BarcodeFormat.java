@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+
+//teste
 package com.google.zxing;
 
 /**
