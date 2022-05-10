@@ -28,7 +28,7 @@ public enum BarcodeFormat {
 
   /** Aztec 2D barcode format. */
   AZTEC,
-
+//3 Teste
   /** CODABAR 1D format. */
   CODABAR,
 
