@@ -324,32 +324,32 @@ public final class EncoderTestCase extends Assert {
   @Test
   public void testAppendModeInfo() {
     BitArray bits = new BitArray();
-    Encoder.appendModeInfo(Mode.NUMERIC, bits);
+    EncoderAppendUtils.appendModeInfo(Mode.NUMERIC, bits);
     assertEquals(" ...X", bits.toString());
   }
 
   @Test
   public void testAppendLengthInfo() throws WriterException {
     BitArray bits = new BitArray();
-    Encoder.appendLengthInfo(1,  // 1 letter (1/1).
+    EncoderAppendUtils.appendLengthInfo(1,  // 1 letter (1/1).
                              Version.getVersionForNumber(1),
                              Mode.NUMERIC,
                              bits);
     assertEquals(" ........ .X", bits.toString());  // 10 bits.
     bits = new BitArray();
-    Encoder.appendLengthInfo(2,  // 2 letters (2/1).
+    EncoderAppendUtils.appendLengthInfo(2,  // 2 letters (2/1).
                              Version.getVersionForNumber(10),
                              Mode.ALPHANUMERIC,
                              bits);
     assertEquals(" ........ .X.", bits.toString());  // 11 bits.
     bits = new BitArray();
-    Encoder.appendLengthInfo(255,  // 255 letter (255/1).
+    EncoderAppendUtils.appendLengthInfo(255,  // 255 letter (255/1).
                              Version.getVersionForNumber(27),
                              Mode.BYTE,
                              bits);
     assertEquals(" ........ XXXXXXXX", bits.toString());  // 16 bits.
     bits = new BitArray();
-    Encoder.appendLengthInfo(512,  // 512 letters (1024/2).
+    EncoderAppendUtils.appendLengthInfo(512,  // 512 letters (1024/2).
                              Version.getVersionForNumber(40),
                              Mode.KANJI,
                              bits);
@@ -361,30 +361,30 @@ public final class EncoderTestCase extends Assert {
     // Should use appendNumericBytes.
     // 1 = 01 = 0001 in 4 bits.
     BitArray bits = new BitArray();
-    Encoder.appendBytes("1", Mode.NUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.appendBytes("1", Mode.NUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals(" ...X" , bits.toString());
     // Should use appendAlphanumericBytes.
     // A = 10 = 0xa = 001010 in 6 bits
     bits = new BitArray();
-    Encoder.appendBytes("A", Mode.ALPHANUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.appendBytes("A", Mode.ALPHANUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals(" ..X.X." , bits.toString());
     // Lower letters such as 'a' cannot be encoded in MODE_ALPHANUMERIC.
     try {
-      Encoder.appendBytes("a", Mode.ALPHANUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+      EncoderAppendUtils.appendBytes("a", Mode.ALPHANUMERIC, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     } catch (WriterException we) {
       // good
     }
     // Should use append8BitBytes.
     // 0x61, 0x62, 0x63
     bits = new BitArray();
-    Encoder.appendBytes("abc", Mode.BYTE, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.appendBytes("abc", Mode.BYTE, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals(" .XX....X .XX...X. .XX...XX", bits.toString());
     // Anything can be encoded in QRCode.MODE_8BIT_BYTE.
-    Encoder.appendBytes("\0", Mode.BYTE, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.appendBytes("\0", Mode.BYTE, bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     // Should use appendKanjiBytes.
     // 0x93, 0x5f
     bits = new BitArray();
-    Encoder.appendBytes(shiftJISString(bytes(0x93, 0x5f)), Mode.KANJI, bits,
+    EncoderAppendUtils.appendBytes(shiftJISString(bytes(0x93, 0x5f)), Mode.KANJI, bits,
         Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals(" .XX.XX.. XXXXX", bits.toString());
   }
@@ -529,23 +529,23 @@ public final class EncoderTestCase extends Assert {
   public void testAppendNumericBytes() {
     // 1 = 01 = 0001 in 4 bits.
     BitArray bits = new BitArray();
-    Encoder.appendNumericBytes("1", bits);
+    EncoderAppendUtils.appendNumericBytes("1", bits);
     assertEquals(" ...X" , bits.toString());
     // 12 = 0xc = 0001100 in 7 bits.
     bits = new BitArray();
-    Encoder.appendNumericBytes("12", bits);
+    EncoderAppendUtils.appendNumericBytes("12", bits);
     assertEquals(" ...XX.." , bits.toString());
     // 123 = 0x7b = 0001111011 in 10 bits.
     bits = new BitArray();
-    Encoder.appendNumericBytes("123", bits);
+    EncoderAppendUtils.appendNumericBytes("123", bits);
     assertEquals(" ...XXXX. XX" , bits.toString());
     // 1234 = "123" + "4" = 0001111011 + 0100
     bits = new BitArray();
-    Encoder.appendNumericBytes("1234", bits);
+    EncoderAppendUtils.appendNumericBytes("1234", bits);
     assertEquals(" ...XXXX. XX.X.." , bits.toString());
     // Empty.
     bits = new BitArray();
-    Encoder.appendNumericBytes("", bits);
+    EncoderAppendUtils.appendNumericBytes("", bits);
     assertEquals("" , bits.toString());
   }
 
@@ -553,23 +553,23 @@ public final class EncoderTestCase extends Assert {
   public void testAppendAlphanumericBytes() throws WriterException {
     // A = 10 = 0xa = 001010 in 6 bits
     BitArray bits = new BitArray();
-    Encoder.appendAlphanumericBytes("A", bits);
+    EncoderAppendUtils.appendAlphanumericBytes("A", bits);
     assertEquals(" ..X.X." , bits.toString());
     // AB = 10 * 45 + 11 = 461 = 0x1cd = 00111001101 in 11 bits
     bits = new BitArray();
-    Encoder.appendAlphanumericBytes("AB", bits);
+    EncoderAppendUtils.appendAlphanumericBytes("AB", bits);
     assertEquals(" ..XXX..X X.X", bits.toString());
     // ABC = "AB" + "C" = 00111001101 + 001100
     bits = new BitArray();
-    Encoder.appendAlphanumericBytes("ABC", bits);
+    EncoderAppendUtils.appendAlphanumericBytes("ABC", bits);
     assertEquals(" ..XXX..X X.X..XX. ." , bits.toString());
     // Empty.
     bits = new BitArray();
-    Encoder.appendAlphanumericBytes("", bits);
+    EncoderAppendUtils.appendAlphanumericBytes("", bits);
     assertEquals("" , bits.toString());
     // Invalid data.
     try {
-      Encoder.appendAlphanumericBytes("abc", new BitArray());
+      EncoderAppendUtils.appendAlphanumericBytes("abc", new BitArray());
     } catch (WriterException we) {
       // good
     }
@@ -579,11 +579,11 @@ public final class EncoderTestCase extends Assert {
   public void testAppend8BitBytes() {
     // 0x61, 0x62, 0x63
     BitArray bits = new BitArray();
-    Encoder.append8BitBytes("abc", bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.append8BitBytes("abc", bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals(" .XX....X .XX...X. .XX...XX", bits.toString());
     // Empty.
     bits = new BitArray();
-    Encoder.append8BitBytes("", bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
+    EncoderAppendUtils.append8BitBytes("", bits, Encoder.DEFAULT_BYTE_MODE_ENCODING);
     assertEquals("", bits.toString());
   }
 
@@ -591,9 +591,9 @@ public final class EncoderTestCase extends Assert {
   @Test
   public void testAppendKanjiBytes() throws WriterException {
     BitArray bits = new BitArray();
-    Encoder.appendKanjiBytes(shiftJISString(bytes(0x93, 0x5f)), bits);
+    EncoderAppendUtils.appendKanjiBytes(shiftJISString(bytes(0x93, 0x5f)), bits);
     assertEquals(" .XX.XX.. XXXXX", bits.toString());
-    Encoder.appendKanjiBytes(shiftJISString(bytes(0xe4, 0xaa)), bits);
+    EncoderAppendUtils.appendKanjiBytes(shiftJISString(bytes(0xe4, 0xaa)), bits);
     assertEquals(" .XX.XX.. XXXXXXX. X.X.X.X. X.", bits.toString());
   }
 
