@@ -198,26 +198,27 @@ public final class HighLevelEncoder {
         context.resetEncoderSignal();
       }
     }
-    int len = context.getCodewordCount();
-    context.updateSymbolInfo();
-    int capacity = context.getSymbolInfo().getDataCapacity();
-    if (len < capacity &&
-        encodingMode != ASCII_ENCODATION &&
-        encodingMode != BASE256_ENCODATION &&
-        encodingMode != EDIFACT_ENCODATION) {
-      context.writeCodeword('\u00fe'); //Unlatch (254)
-    }
-    //Padding
-    StringBuilder codewords = context.getCodewords();
-    if (codewords.length() < capacity) {
-      codewords.append(PAD);
-    }
-    while (codewords.length() < capacity) {
-      codewords.append(randomize253State(codewords.length() + 1));
-    }
-
-    return context.getCodewords().toString();
+    StringBuilder codewords = codewordsConstructor(context, encodingMode);
+	return context.getCodewords().toString();
   }
+
+private static StringBuilder codewordsConstructor(EncoderContext context, int encodingMode) {
+	int len = context.getCodewordCount();
+	context.updateSymbolInfo();
+	int capacity = context.getSymbolInfo().getDataCapacity();
+	if (len < capacity && encodingMode != ASCII_ENCODATION && encodingMode != BASE256_ENCODATION
+			&& encodingMode != EDIFACT_ENCODATION) {
+		context.writeCodeword('\u00fe');
+	}
+	StringBuilder codewords = context.getCodewords();
+	if (codewords.length() < capacity) {
+		codewords.append(PAD);
+	}
+	while (codewords.length() < capacity) {
+		codewords.append(randomize253State(codewords.length() + 1));
+	}
+	return codewords;
+}
 
   static int lookAheadTest(CharSequence msg, int startpos, int currentMode) {
     int newMode = lookAheadTestIntern(msg, startpos, currentMode);
@@ -467,13 +468,18 @@ public final class HighLevelEncoder {
    * @return the requested character count
    */
   public static int determineConsecutiveDigitCount(CharSequence msg, int startpos) {
-    int len = msg.length();
-    int idx = startpos;
-    while (idx < len && isDigit(msg.charAt(idx))) {
-      idx++;
-    }
-    return idx - startpos;
+    int idx = idxInit(msg, startpos);
+	return idx - startpos;
   }
+
+private static int idxInit(CharSequence msg, int startpos) {
+	int len = msg.length();
+	int idx = startpos;
+	while (idx < len && isDigit(msg.charAt(idx))) {
+		idx++;
+	}
+	return idx;
+}
 
   static void illegalCharacter(char c) {
     String hex = Integer.toHexString(c);
