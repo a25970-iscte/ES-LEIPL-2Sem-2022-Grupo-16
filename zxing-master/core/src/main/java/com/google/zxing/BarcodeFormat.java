@@ -23,6 +23,7 @@ package com.google.zxing;
  */
 // Teste de commit
 
+//2Teste de commit
 public enum BarcodeFormat {
 
   /** Aztec 2D barcode format. */
@@ -77,4 +78,4 @@ public enum BarcodeFormat {
   UPC_EAN_EXTENSION
 
 }
-//Teste Commit
+//Teste Commit  https://github.com/a25970-iscte/ES-LEIPL-2Sem-2022-Grupo-16.git
