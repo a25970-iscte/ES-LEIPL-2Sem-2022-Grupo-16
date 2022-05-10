@@ -15,7 +15,7 @@
  */
 
 
-//teste
+//testedfsdf
 package com.google.zxing;
 
 /**
