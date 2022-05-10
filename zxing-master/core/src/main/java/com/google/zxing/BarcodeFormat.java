@@ -40,7 +40,7 @@ public enum BarcodeFormat {
 
   /** Code 128 1D format. */
   CODE_128,
-
+//4Teste
   /** Data Matrix 2D barcode format. */
   DATA_MATRIX,
 
