@@ -535,18 +535,21 @@ final class DecodedBitStreamParser {
       throw FormatException.getFormatInstance();
     }
 
-    byte[] bytes = new byte[count];
-    for (int i = 0; i < count; i++) {
-      // Have seen this particular error in the wild, such as at
-      // http://www.bcgen.com/demo/IDAutomationStreamingDataMatrix.aspx?MODE=3&D=Fred&PFMT=3&PT=F&X=0.3&O=0&LM=0.2
-      if (bits.available() < 8) {
-        throw FormatException.getFormatInstance();
-      }
-      bytes[i] = (byte) unrandomize255State(bits.readBits(8), codewordPosition++);
-    }
-    byteSegments.add(bytes);
+    byte[] bytes = byteFiller(bits, codewordPosition, count);
+	byteSegments.add(bytes);
     result.append(new String(bytes, StandardCharsets.ISO_8859_1));
   }
+
+private static byte[] byteFiller(BitSource bits, int codewordPosition, int count) throws FormatException {
+	byte[] bytes = new byte[count];
+	for (int i = 0; i < count; i++) {
+		if (bits.available() < 8) {
+			throw FormatException.getFormatInstance();
+		}
+		bytes[i] = (byte) unrandomize255State(bits.readBits(8), codewordPosition++);
+	}
+	return bytes;
+}
 
   /**
    * See ISO 16022:2007, 5.4.1
@@ -626,14 +629,19 @@ final class DecodedBitStreamParser {
         currentBytes = new StringBuilder();
         hadECI = true;
       } else if (currentBytes.length() > 0) {
-        byte[] bytes = new byte[currentBytes.length()];
-        for (int i = 0; i < bytes.length; i++) {
-          bytes[i] = (byte) (currentBytes.charAt(i) & 0xff);
-        }
-        currentChars.append(new String(bytes, currentCharset));
-        currentBytes.setLength(0);
+        byte[] bytes = bytesFiller();
+		currentChars.append(new String(bytes, currentCharset));
       }
     }
+
+	private byte[] bytesFiller() {
+		byte[] bytes = new byte[currentBytes.length()];
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) (currentBytes.charAt(i) & 0xff);
+		}
+		currentBytes.setLength(0);
+		return bytes;
+	}
 
     private void append(StringBuilder value) {
       encodeCurrentBytesIfAny();
