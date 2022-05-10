@@ -1,0 +1,6 @@
+projectKey=ES-LEIPL-2SEM-2022-GRUPO-16_NEWRULES
+serverUrl=http://localhost:9000
+serverVersion=9.4.0.54424
+dashboardUrl=http://localhost:9000/dashboard?id=ES-LEIPL-2SEM-2022-GRUPO-16_NEWRULES
+ceTaskId=AYBg94kbCna1z_w_oIi-
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AYBg94kbCna1z_w_oIi-

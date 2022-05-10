@@ -209,27 +209,7 @@ public final class Encoder {
     BitMatrix matrix = new BitMatrix(matrixSize);
 
     // draw data bits
-    for (int i = 0, rowOffset = 0; i < layers; i++) {
-      int rowSize = (layers - i) * 4 + (compact ? 9 : 12);
-      for (int j = 0; j < rowSize; j++) {
-        int columnOffset = j * 2;
-        for (int k = 0; k < 2; k++) {
-          if (messageBits.get(rowOffset + columnOffset + k)) {
-            matrix.set(alignmentMap[i * 2 + k], alignmentMap[i * 2 + j]);
-          }
-          if (messageBits.get(rowOffset + rowSize * 2 + columnOffset + k)) {
-            matrix.set(alignmentMap[i * 2 + j], alignmentMap[baseMatrixSize - 1 - i * 2 - k]);
-          }
-          if (messageBits.get(rowOffset + rowSize * 4 + columnOffset + k)) {
-            matrix.set(alignmentMap[baseMatrixSize - 1 - i * 2 - k], alignmentMap[baseMatrixSize - 1 - i * 2 - j]);
-          }
-          if (messageBits.get(rowOffset + rowSize * 6 + columnOffset + k)) {
-            matrix.set(alignmentMap[baseMatrixSize - 1 - i * 2 - j], alignmentMap[i * 2 + k]);
-          }
-        }
-      }
-      rowOffset += rowSize * 8;
-    }
+    drawDataBits(layers, compact, messageBits, matrix, alignmentMap, baseMatrixSize);
 
     // draw mode message
     drawModeMessage(matrix, compact, matrixSize, modeMessage);
@@ -256,6 +236,32 @@ public final class Encoder {
     aztec.setCodeWords(messageSizeInWords);
     aztec.setMatrix(matrix);
     return aztec;
+  }
+
+  private static void drawDataBits(int layers, boolean compact, BitArray messageBits, BitMatrix matrix,
+      int[] alignmentMap, int baseMatrixSize) {
+    // draw data bits
+    for (int i = 0, rowOffset = 0; i < layers; i++) {
+      int rowSize = (layers - i) * 4 + (compact ? 9 : 12);
+      for (int j = 0; j < rowSize; j++) {
+        int columnOffset = j * 2;
+        for (int k = 0; k < 2; k++) {
+          if (messageBits.get(rowOffset + columnOffset + k)) {
+            matrix.set(alignmentMap[i * 2 + k], alignmentMap[i * 2 + j]);
+          }
+          if (messageBits.get(rowOffset + rowSize * 2 + columnOffset + k)) {
+            matrix.set(alignmentMap[i * 2 + j], alignmentMap[baseMatrixSize - 1 - i * 2 - k]);
+          }
+          if (messageBits.get(rowOffset + rowSize * 4 + columnOffset + k)) {
+            matrix.set(alignmentMap[baseMatrixSize - 1 - i * 2 - k], alignmentMap[baseMatrixSize - 1 - i * 2 - j]);
+          }
+          if (messageBits.get(rowOffset + rowSize * 6 + columnOffset + k)) {
+            matrix.set(alignmentMap[baseMatrixSize - 1 - i * 2 - j], alignmentMap[i * 2 + k]);
+          }
+        }
+      }
+      rowOffset += rowSize * 8;
+    }
   }
 
   private static void drawBullsEye(BitMatrix matrix, int center, int size) {
