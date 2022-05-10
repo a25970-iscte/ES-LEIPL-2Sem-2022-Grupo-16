@@ -21,6 +21,8 @@ package com.google.zxing;
  *
  * @author Sean Owen
  */
+// Teste de commit
+
 public enum BarcodeFormat {
 
   /** Aztec 2D barcode format. */
@@ -75,3 +77,4 @@ public enum BarcodeFormat {
   UPC_EAN_EXTENSION
 
 }
+//Teste Commit
