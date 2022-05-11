@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 /*
  * Copyright 2006-2007 Jeremias Maerki.
  *
@@ -131,4 +134,7 @@ private final String msg;
     this.symbolInfo = null;
   }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
