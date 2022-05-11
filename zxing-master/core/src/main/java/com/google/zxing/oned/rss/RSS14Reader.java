@@ -29,7 +29,6 @@ import com.google.zxing.common.detector.MathUtils;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -56,12 +55,11 @@ public final class RSS14Reader extends AbstractRSSReader {
       {1,3,9,1},
   };
 
-  private final List<Pair> possibleLeftPairs;
-  private final List<Pair> possibleRightPairs;
+  private RSS14ReaderData data = new RSS14ReaderData();
 
-  public RSS14Reader() {
-    possibleLeftPairs = new ArrayList<>();
-    possibleRightPairs = new ArrayList<>();
+public RSS14Reader() {
+    data.possibleLeftPairs = new ArrayList<>();
+    data.possibleRightPairs = new ArrayList<>();
   }
 
   @Override
@@ -69,14 +67,14 @@ public final class RSS14Reader extends AbstractRSSReader {
                           BitArray row,
                           Map<DecodeHintType,?> hints) throws NotFoundException {
     Pair leftPair = decodePair(row, false, rowNumber, hints);
-    addOrTally(possibleLeftPairs, leftPair);
+    addOrTally(data.possibleLeftPairs, leftPair);
     row.reverse();
     Pair rightPair = decodePair(row, true, rowNumber, hints);
-    addOrTally(possibleRightPairs, rightPair);
+    addOrTally(data.possibleRightPairs, rightPair);
     row.reverse();
-    for (Pair left : possibleLeftPairs) {
+    for (Pair left : data.possibleLeftPairs) {
       if (left.getCount() > 1) {
-        for (Pair right : possibleRightPairs) {
+        for (Pair right : data.possibleRightPairs) {
           if (right.getCount() > 1 && checkChecksum(left, right)) {
             return constructResult(left, right);
           }
@@ -105,8 +103,8 @@ public final class RSS14Reader extends AbstractRSSReader {
 
   @Override
   public void reset() {
-    possibleLeftPairs.clear();
-    possibleRightPairs.clear();
+    data.possibleLeftPairs.clear();
+    data.possibleRightPairs.clear();
   }
 
   private static Result constructResult(Pair leftPair, Pair rightPair) {
