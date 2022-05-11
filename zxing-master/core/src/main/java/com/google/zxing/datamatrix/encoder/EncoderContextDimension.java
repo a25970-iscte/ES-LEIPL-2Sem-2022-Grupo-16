@@ -19,8 +19,5 @@ public class EncoderContextDimension {
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 	}
-<<<<<<< HEAD
 
-=======
->>>>>>> main
 }
