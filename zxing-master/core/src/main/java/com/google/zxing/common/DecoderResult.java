@@ -18,6 +18,11 @@ package com.google.zxing.common;
 
 import java.util.List;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.Result;
+import com.google.zxing.ResultMetadataType;
+import com.google.zxing.ResultPoint;
+
 /**
  * <p>Encapsulates the result of decoding a matrix of bits. This typically
  * applies to 2D barcode formats. For now it contains the raw bytes obtained,
@@ -172,5 +177,26 @@ public final class DecoderResult {
   public int getSymbologyModifier() {
     return symbologyModifier;
   }
+
+public Result aztecdecoded(ResultPoint[] points) {
+  Result result = new Result(getText(),
+                             getRawBytes(),
+                             getNumBits(),
+                             points,
+                             BarcodeFormat.AZTEC,
+                             System.currentTimeMillis());
+
+  List<byte[]> byteSegments = getByteSegments();
+  if (byteSegments != null) {
+    result.putMetadata(ResultMetadataType.BYTE_SEGMENTS, byteSegments);
+  }
+  String ecLevel = getECLevel();
+  if (ecLevel != null) {
+    result.putMetadata(ResultMetadataType.ERROR_CORRECTION_LEVEL, ecLevel);
+  }
+  result.putMetadata(ResultMetadataType.SYMBOLOGY_IDENTIFIER, "]z" + getSymbologyModifier());
+
+  return result;
+}
 
 }
