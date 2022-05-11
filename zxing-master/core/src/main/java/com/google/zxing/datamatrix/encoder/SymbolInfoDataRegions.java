@@ -21,7 +21,7 @@ public class SymbolInfoDataRegions {
 			return 6;
 		default:
 			throw new IllegalStateException("Cannot handle this number of data regions");
-		}
+		 }
 	}
 
 	public int getVerticalDataRegions() {
