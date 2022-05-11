@@ -172,7 +172,7 @@
             <notimestamp>true</notimestamp>
             <encoding>${project.build.sourceEncoding}</encoding>
             <docencoding>${project.reporting.outputEncoding}</docencoding>
-            <doclint>all</doclint>
+            <doclint>none</doclint>
           </configuration>
           <executions>
             <execution>

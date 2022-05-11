@@ -48,7 +48,7 @@ public abstract class AbstractRSSReader extends OneDReader {
     evenCounts = new int[dataCharacterCounters.length / 2];
   }
 
-  protected final int[] getDecodeFinderCounters() {
+  public final int[] getDecodeFinderCounters() {
     return decodeFinderCounters;
   }
 
@@ -72,7 +72,7 @@ public abstract class AbstractRSSReader extends OneDReader {
     return evenCounts;
   }
 
-  protected static int parseFinderValue(int[] counters,
+  public static int parseFinderValue(int[] counters,
                                         int[][] finderPatterns) throws NotFoundException {
     for (int value = 0; value < finderPatterns.length; value++) {
       if (patternMatchVariance(counters, finderPatterns[value], MAX_INDIVIDUAL_VARIANCE) <
@@ -117,7 +117,7 @@ public abstract class AbstractRSSReader extends OneDReader {
     array[index]--;
   }
 
-  protected static boolean isFinderPattern(int[] counters) {
+  public static boolean isFinderPattern(int[] counters) {
     int firstTwoSum = counters[0] + counters[1];
     int sum = firstTwoSum + counters[2] + counters[3];
     float ratio = firstTwoSum / (float) sum;

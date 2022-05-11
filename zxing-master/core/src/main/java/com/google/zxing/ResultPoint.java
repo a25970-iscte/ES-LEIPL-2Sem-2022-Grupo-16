@@ -17,6 +17,7 @@
 package com.google.zxing;
 
 import com.google.zxing.common.detector.MathUtils;
+import com.google.zxing.qrcode.detector.Detector;
 
 /**
  * <p>Encapsulates a point of interest in an image containing a barcode. Typically, this
@@ -126,5 +127,23 @@ public class ResultPoint {
     float bY = pointB.y;
     return ((pointC.x - bX) * (pointA.y - bY)) - ((pointC.y - bY) * (pointA.x - bX));
   }
+
+/**
+ * <p>Estimates module size based on two finder patterns -- it uses {@link #sizeOfBlackWhiteBlackRunBothWays(int,int,int,int)}  to figure the width of each, measuring along the axis between their centers.</p>
+ * @param detector
+ */
+public float DetectorcalculateModule(ResultPoint otherPattern, Detector detector) {
+	float moduleSizeEst1 = detector.sizeOfBlackWhiteBlackRunBothWays((int) getX(), (int) getY(),
+			(int) otherPattern.getX(), (int) otherPattern.getY());
+	float moduleSizeEst2 = detector.sizeOfBlackWhiteBlackRunBothWays((int) otherPattern.getX(),
+			(int) otherPattern.getY(), (int) getX(), (int) getY());
+	if (Float.isNaN(moduleSizeEst1)) {
+		return moduleSizeEst2 / 7.0f;
+	}
+	if (Float.isNaN(moduleSizeEst2)) {
+		return moduleSizeEst1 / 7.0f;
+	}
+	return (moduleSizeEst1 + moduleSizeEst2) / 14.0f;
+}
 
 }

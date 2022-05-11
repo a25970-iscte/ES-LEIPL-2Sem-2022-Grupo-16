@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+
+//testedfsdf
 package com.google.zxing;
 
 /**
