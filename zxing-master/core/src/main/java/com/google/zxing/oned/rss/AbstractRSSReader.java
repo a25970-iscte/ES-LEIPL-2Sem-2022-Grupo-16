@@ -48,7 +48,7 @@ public abstract class AbstractRSSReader extends OneDReader {
     evenCounts = new int[dataCharacterCounters.length / 2];
   }
 
-  protected final int[] getDecodeFinderCounters() {
+  public final int[] getDecodeFinderCounters() {
     return decodeFinderCounters;
   }
 
