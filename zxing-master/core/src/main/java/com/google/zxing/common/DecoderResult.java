@@ -174,6 +174,8 @@ public final class DecoderResult {
     return structuredAppendSequenceNumber;
   }
 
+  //GITHUB TEST
+  
   public int getSymbologyModifier() {
     return symbologyModifier;
   }
