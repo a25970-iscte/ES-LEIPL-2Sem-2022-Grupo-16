@@ -96,7 +96,7 @@ public final class VEventResultParser extends ResultParser {
   }
 
   private static String[] matchVCardPrefixedField(CharSequence prefix, String rawText) {
-    List<List<String>> values = VCardResultParser.matchVCardPrefixedField(prefix, rawText, true, false);
+    List<List<String>> values = AddressBookParsedResult.matchVCardPrefixedField(prefix, rawText, true, false);
     if (values == null || values.isEmpty()) {
       return null;
     }
