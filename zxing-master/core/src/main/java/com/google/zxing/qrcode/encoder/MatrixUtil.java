@@ -27,7 +27,7 @@ import com.google.zxing.qrcode.decoder.Version;
  */
 final class MatrixUtil {
 
-  private static final int[][] POSITION_DETECTION_PATTERN = {
+  static final int[][] POSITION_DETECTION_PATTERN = {
       {1, 1, 1, 1, 1, 1, 1},
       {1, 0, 0, 0, 0, 0, 1},
       {1, 0, 1, 1, 1, 0, 1},
@@ -37,7 +37,7 @@ final class MatrixUtil {
       {1, 1, 1, 1, 1, 1, 1},
   };
 
-  private static final int[][] POSITION_ADJUSTMENT_PATTERN = {
+  static final int[][] POSITION_ADJUSTMENT_PATTERN = {
       {1, 1, 1, 1, 1},
       {1, 0, 0, 0, 1},
       {1, 0, 1, 0, 1},
@@ -46,7 +46,7 @@ final class MatrixUtil {
   };
 
   // From Appendix E. Table 1, JIS0510X:2004 (p 71). The table was double-checked by komatsu.
-  private static final int[][] POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = {
+  static final int[][] POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = {
       {-1, -1, -1, -1,  -1,  -1,  -1},  // Version 1
       { 6, 18, -1, -1,  -1,  -1,  -1},  // Version 2
       { 6, 22, -1, -1,  -1,  -1,  -1},  // Version 3
@@ -152,14 +152,14 @@ final class MatrixUtil {
   // - Position adjustment patterns, if need be
   static void embedBasicPatterns(Version version, ByteMatrix matrix) throws WriterException {
     // Let's get started with embedding big squares at corners.
-    embedPositionDetectionPatternsAndSeparators(matrix);
+    Embed.embedPositionDetectionPatternsAndSeparators(matrix);
     // Then, embed the dark dot at the left bottom corner.
-    embedDarkDotAtLeftBottomCorner(matrix);
+    Embed.embedDarkDotAtLeftBottomCorner(matrix);
 
     // Position adjustment patterns appear if version >= 2.
-    maybeEmbedPositionAdjustmentPatterns(version, matrix);
+    Embed.maybeEmbedPositionAdjustmentPatterns(version, matrix);
     // Timing patterns should be embedded after position adj. patterns.
-    embedTimingPatterns(matrix);
+    Embed.embedTimingPatterns(matrix);
   }
 
   // Embed type information. On success, modify the matrix.
@@ -353,125 +353,8 @@ final class MatrixUtil {
   }
 
   // Check if "value" is empty.
-  private static boolean isEmpty(int value) {
+  static boolean isEmpty(int value) {
     return value == -1;
-  }
-
-  private static void embedTimingPatterns(ByteMatrix matrix) {
-    // -8 is for skipping position detection patterns (size 7), and two horizontal/vertical
-    // separation patterns (size 1). Thus, 8 = 7 + 1.
-    for (int i = 8; i < matrix.getWidth() - 8; ++i) {
-      int bit = (i + 1) % 2;
-      // Horizontal line.
-      if (isEmpty(matrix.get(i, 6))) {
-        matrix.set(i, 6, bit);
-      }
-      // Vertical line.
-      if (isEmpty(matrix.get(6, i))) {
-        matrix.set(6, i, bit);
-      }
-    }
-  }
-
-  // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
-  private static void embedDarkDotAtLeftBottomCorner(ByteMatrix matrix) throws WriterException {
-    if (matrix.get(8, matrix.getHeight() - 8) == 0) {
-      throw new WriterException();
-    }
-    matrix.set(8, matrix.getHeight() - 8, 1);
-  }
-
-  private static void embedHorizontalSeparationPattern(int xStart,
-                                                       int yStart,
-                                                       ByteMatrix matrix) throws WriterException {
-    for (int x = 0; x < 8; ++x) {
-      if (!isEmpty(matrix.get(xStart + x, yStart))) {
-        throw new WriterException();
-      }
-      matrix.set(xStart + x, yStart, 0);
-    }
-  }
-
-  private static void embedVerticalSeparationPattern(int xStart,
-                                                     int yStart,
-                                                     ByteMatrix matrix) throws WriterException {
-    for (int y = 0; y < 7; ++y) {
-      if (!isEmpty(matrix.get(xStart, yStart + y))) {
-        throw new WriterException();
-      }
-      matrix.set(xStart, yStart + y, 0);
-    }
-  }
-
-  private static void embedPositionAdjustmentPattern(int xStart, int yStart, ByteMatrix matrix) {
-    for (int y = 0; y < 5; ++y) {
-      int[] patternY = POSITION_ADJUSTMENT_PATTERN[y];
-      for (int x = 0; x < 5; ++x) {
-        matrix.set(xStart + x, yStart + y, patternY[x]);
-      }
-    }
-  }
-
-  private static void embedPositionDetectionPattern(int xStart, int yStart, ByteMatrix matrix) {
-    for (int y = 0; y < 7; ++y) {
-      int[] patternY = POSITION_DETECTION_PATTERN[y];
-      for (int x = 0; x < 7; ++x) {
-        matrix.set(xStart + x, yStart + y, patternY[x]);
-      }
-    }
-  }
-
-  // Embed position detection patterns and surrounding vertical/horizontal separators.
-  private static void embedPositionDetectionPatternsAndSeparators(ByteMatrix matrix) throws WriterException {
-    // Embed three big squares at corners.
-    int pdpWidth = POSITION_DETECTION_PATTERN[0].length;
-    // Left top corner.
-    embedPositionDetectionPattern(0, 0, matrix);
-    // Right top corner.
-    embedPositionDetectionPattern(matrix.getWidth() - pdpWidth, 0, matrix);
-    // Left bottom corner.
-    embedPositionDetectionPattern(0, matrix.getWidth() - pdpWidth, matrix);
-
-    // Embed horizontal separation patterns around the squares.
-    int hspWidth = 8;
-    // Left top corner.
-    embedHorizontalSeparationPattern(0, hspWidth - 1, matrix);
-    // Right top corner.
-    embedHorizontalSeparationPattern(matrix.getWidth() - hspWidth,
-        hspWidth - 1, matrix);
-    // Left bottom corner.
-    embedHorizontalSeparationPattern(0, matrix.getWidth() - hspWidth, matrix);
-
-    // Embed vertical separation patterns around the squares.
-    int vspSize = 7;
-    // Left top corner.
-    embedVerticalSeparationPattern(vspSize, 0, matrix);
-    // Right top corner.
-    embedVerticalSeparationPattern(matrix.getHeight() - vspSize - 1, 0, matrix);
-    // Left bottom corner.
-    embedVerticalSeparationPattern(vspSize, matrix.getHeight() - vspSize,
-        matrix);
-  }
-
-  // Embed position adjustment patterns if need be.
-  private static void maybeEmbedPositionAdjustmentPatterns(Version version, ByteMatrix matrix) {
-    if (version.getVersionNumber() < 2) {  // The patterns appear if version >= 2
-      return;
-    }
-    int index = version.getVersionNumber() - 1;
-    int[] coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[index];
-    for (int y : coordinates) {
-      if (y >= 0) {
-        for (int x : coordinates) {
-          if (x >= 0 && isEmpty(matrix.get(x, y))) {
-            // If the cell is unset, we embed the position adjustment pattern here.
-            // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
-            // left top corner.
-            embedPositionAdjustmentPattern(x - 2, y - 2, matrix);
-          }
-        }
-      }
-    }
   }
 
 }

@@ -260,15 +260,8 @@ public final class Code128Writer extends OneDimensionalCodeWriter {
     // Append stop code
     patterns.add(Code128Reader.CODE_PATTERNS[CODE_STOP]);
 
-    // Compute code width
-    int codeWidth = 0;
-    for (int[] pattern : patterns) {
-      for (int width : pattern) {
-        codeWidth += width;
-      }
-    }
-
-    // Compute result
+    int codeWidth = codeWidthInit(patterns);
+	// Compute result
     boolean[] result = new boolean[codeWidth];
     int pos = 0;
     for (int[] pattern : patterns) {
@@ -277,6 +270,16 @@ public final class Code128Writer extends OneDimensionalCodeWriter {
 
     return result;
   }
+
+private static int codeWidthInit(Collection<int[]> patterns) {
+	int codeWidth = 0;
+	for (int[] pattern : patterns) {
+		for (int width : pattern) {
+			codeWidth += width;
+		}
+	}
+	return codeWidth;
+}
 
   private static CType findCType(CharSequence value, int start) {
     int last = value.length();
@@ -423,41 +426,45 @@ public final class Code128Writer extends OneDimensionalCodeWriter {
             }
           }
         } else { // charset A or B
-          int patternIndex;
-          switch (contents.charAt(i)) {
-            case ESCAPE_FNC_1:
-              patternIndex = CODE_FNC_1;
-              break;
-            case ESCAPE_FNC_2:
-              patternIndex = CODE_FNC_2;
-              break;
-            case ESCAPE_FNC_3:
-              patternIndex = CODE_FNC_3;
-              break;
-            case ESCAPE_FNC_4:
-              if ((charset == Charset.A && latch != Latch.SHIFT) ||
-                  (charset == Charset.B && latch == Latch.SHIFT)) {
-                patternIndex = CODE_FNC_4_A;
-              } else {
-                patternIndex = CODE_FNC_4_B;
-              }
-              break;
-            default:
-              patternIndex = contents.charAt(i) - ' ';
-          }
-          if ((charset == Charset.A && latch != Latch.SHIFT) ||
-              (charset == Charset.B && latch == Latch.SHIFT)) {
-            if (patternIndex < 0) {
-              patternIndex += '`';
-            }
-          }
-          addPattern(patterns, patternIndex, checkSum, checkWeight, i);
+          int patternIndex = patternIndexCase(contents, charset, i, latch);
+		addPattern(patterns, patternIndex, checkSum, checkWeight, i);
         }
       }
       memoizedCost = null;
       minPath = null;
       return produceResult(patterns, checkSum[0]);
     }
+
+	private int patternIndexCase(String contents, Code128Writer.MinimalEncoder.Charset charset, int i,
+			Code128Writer.MinimalEncoder.Latch latch) {
+		int patternIndex;
+		switch (contents.charAt(i)) {
+		case ESCAPE_FNC_1:
+			patternIndex = CODE_FNC_1;
+			break;
+		case ESCAPE_FNC_2:
+			patternIndex = CODE_FNC_2;
+			break;
+		case ESCAPE_FNC_3:
+			patternIndex = CODE_FNC_3;
+			break;
+		case ESCAPE_FNC_4:
+			if ((charset == Charset.A && latch != Latch.SHIFT) || (charset == Charset.B && latch == Latch.SHIFT)) {
+				patternIndex = CODE_FNC_4_A;
+			} else {
+				patternIndex = CODE_FNC_4_B;
+			}
+			break;
+		default:
+			patternIndex = contents.charAt(i) - ' ';
+		}
+		if ((charset == Charset.A && latch != Latch.SHIFT) || (charset == Charset.B && latch == Latch.SHIFT)) {
+			if (patternIndex < 0) {
+				patternIndex += '`';
+			}
+		}
+		return patternIndex;
+	}
 
     private static void addPattern(Collection<int[]> patterns,
                                   int patternIndex,

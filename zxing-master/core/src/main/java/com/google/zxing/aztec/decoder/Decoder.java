@@ -114,6 +114,11 @@ public final class Decoder {
     ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
     Charset encoding = DEFAULT_ENCODING;
 
+    return decodedString(result, endIndex, latchTable, shiftTable, correctedBits, decodedBytes, encoding);
+  }
+  
+  private static String decodedString(StringBuilder result, int endIndex, Table latchTable, Table shiftTable,
+      boolean[] correctedBits, ByteArrayOutputStream decodedBytes, Charset encoding) throws FormatException {
     int index = 0;
     while (index < endIndex) {
       if (shiftTable == Table.BINARY) {
@@ -131,7 +136,7 @@ public final class Decoder {
         }
         for (int charCount = 0; charCount < length; charCount++) {
           if (endIndex - index < 8) {
-            index = endIndex;  // Force outer loop to exit
+            index = endIndex; // Force outer loop to exit
             break;
           }
           int code = readCode(correctedBits, index, 8);
@@ -154,7 +159,7 @@ public final class Decoder {
           }
           int n = readCode(correctedBits, index, 3);
           index += 3;
-          //  flush bytes, FLG changes state
+          // flush bytes, FLG changes state
           try {
             result.append(decodedBytes.toString(encoding.name()));
           } catch (UnsupportedEncodingException uee) {
@@ -163,7 +168,7 @@ public final class Decoder {
           decodedBytes.reset();
           switch (n) {
             case 0:
-              result.append((char) 29);  // translate FNC1 as ASCII 29
+              result.append((char) 29); // translate FNC1 as ASCII 29
               break;
             case 7:
               throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
@@ -191,16 +196,18 @@ public final class Decoder {
           shiftTable = latchTable;
         } else if (str.startsWith("CTRL_")) {
           // Table changes
-          // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+          // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which
+          // it was invoked.
           // That's including when that mode is a shift.
           // Our test case dlusbs.png for issue #642 exercises that.
-          latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+          latchTable = shiftTable; // Latch the current mode, so as to return to Upper after U/S B/S
           shiftTable = getTable(str.charAt(5));
           if (str.charAt(6) == 'L') {
             latchTable = shiftTable;
           }
         } else {
-          // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+          // Though stored as a table of strings for convenience, codes actually represent
+          // 1 or 2 *bytes*.
           byte[] b = str.getBytes(StandardCharsets.US_ASCII);
           decodedBytes.write(b, 0, b.length);
           // Go back to whatever mode we had been in

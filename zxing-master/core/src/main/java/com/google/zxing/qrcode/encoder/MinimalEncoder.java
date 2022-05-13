@@ -634,7 +634,7 @@ final class MinimalEncoder {
           bits.appendBits(encoders.getECIValue(charsetEncoderIndex), 8);
         } else if (characterLength > 0) {
           // append data
-          Encoder.appendBytes(stringToEncode.substring(fromPosition, fromPosition + characterLength), mode, bits,
+          EncoderAppendUtils.appendBytes(stringToEncode.substring(fromPosition, fromPosition + characterLength), mode, bits,
               encoders.getCharset(charsetEncoderIndex));
         }
       }

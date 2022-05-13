@@ -271,17 +271,22 @@ final class DecodedBitStreamParser {
 
     // copy optional fields to additional options
     if (optionalFieldsStart != -1) {
-      int optionalFieldsLength = codeIndex - optionalFieldsStart;
-      if (resultMetadata.isLastSegment()) {
-        // do not include terminator
-        optionalFieldsLength--;
-      }
-      resultMetadata.setOptionalData(
-          Arrays.copyOfRange(codewords, optionalFieldsStart, optionalFieldsStart + optionalFieldsLength));
+      int optionalFieldsLength = optionalFieldsLength(codewords, resultMetadata, codeIndex, optionalFieldsStart);
     }
 
     return codeIndex;
   }
+
+private static int optionalFieldsLength(int[] codewords, PDF417ResultMetadata resultMetadata, int codeIndex,
+		int optionalFieldsStart) {
+	int optionalFieldsLength = codeIndex - optionalFieldsStart;
+	if (resultMetadata.isLastSegment()) {
+		optionalFieldsLength--;
+	}
+	resultMetadata.setOptionalData(
+			Arrays.copyOfRange(codewords, optionalFieldsStart, optionalFieldsStart + optionalFieldsLength));
+	return optionalFieldsLength;
+}
 
   /**
    * Text Compaction mode (see 5.4.1.5) permits all printable ASCII characters to be

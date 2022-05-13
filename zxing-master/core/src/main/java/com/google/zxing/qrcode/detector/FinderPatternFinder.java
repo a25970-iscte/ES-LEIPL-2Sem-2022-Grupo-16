@@ -22,10 +22,8 @@ import com.google.zxing.ResultPoint;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.BitMatrix;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -165,14 +163,6 @@ public class FinderPatternFinder {
     ResultPoint.orderBestPatterns(patternInfo);
 
     return new FinderPatternInfo(patternInfo);
-  }
-
-  /**
-   * Given a count of black/white/black/white/black pixels just seen and an end position,
-   * figures the location of the center of this run.
-   */
-  private static float centerFromEnd(int[] stateCount, int end) {
-    return (end - stateCount[4] - stateCount[3]) - stateCount[2] / 2.0f;
   }
 
   /**
@@ -402,7 +392,7 @@ public class FinderPatternFinder {
       return Float.NaN;
     }
 
-    return foundPatternCross(stateCount) ? centerFromEnd(stateCount, i) : Float.NaN;
+    return foundPatternCross(stateCount) ? FinderPatternFinderUtils.centerFromEnd(stateCount, i) : Float.NaN;
   }
 
   /**
@@ -471,7 +461,7 @@ public class FinderPatternFinder {
       return Float.NaN;
     }
 
-    return foundPatternCross(stateCount) ? centerFromEnd(stateCount, j) : Float.NaN;
+    return foundPatternCross(stateCount) ? FinderPatternFinderUtils.centerFromEnd(stateCount, j) : Float.NaN;
   }
 
   /**
@@ -508,7 +498,7 @@ public class FinderPatternFinder {
   protected final boolean handlePossibleCenter(int[] stateCount, int i, int j) {
     int stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] +
         stateCount[4];
-    float centerJ = centerFromEnd(stateCount, j);
+    float centerJ = FinderPatternFinderUtils.centerFromEnd(stateCount, j);
     float centerI = crossCheckVertical(i, (int) centerJ, stateCount[2], stateCountTotal);
     if (!Float.isNaN(centerI)) {
       // Re-cross check
@@ -600,15 +590,6 @@ public class FinderPatternFinder {
   }
 
   /**
-   * Get square of distance between a and b.
-   */
-  private static double squaredDistance(FinderPattern a, FinderPattern b) {
-    double x = a.getX() - b.getX();
-    double y = a.getY() - b.getY();
-    return x * x + y * y;
-  }
-
-  /**
    * @return the 3 best {@link FinderPattern}s from our list of candidates. The "best" are
    *         those have similar module size and form a shape closer to a isosceles right triangle.
    * @throws NotFoundException if 3 such finder patterns do not exist
@@ -632,7 +613,7 @@ public class FinderPatternFinder {
 
       for (int j = i + 1; j < possibleCenters.size() - 1; j++) {
         FinderPattern fpj = possibleCenters.get(j);
-        double squares0 = squaredDistance(fpi, fpj);
+        double squares0 = FinderPatternFinderUtils.squaredDistance(fpi, fpj);
 
         for (int k = j + 1; k < possibleCenters.size(); k++) {
           FinderPattern fpk = possibleCenters.get(k);
@@ -643,8 +624,8 @@ public class FinderPatternFinder {
           }
 
           double a = squares0;
-          double b = squaredDistance(fpj, fpk);
-          double c = squaredDistance(fpi, fpk);
+          double b = FinderPatternFinderUtils.squaredDistance(fpj, fpk);
+          double c = FinderPatternFinderUtils.squaredDistance(fpi, fpk);
 
           // sorts ascending - inlined
           if (a < b) {
@@ -700,16 +681,6 @@ public class FinderPatternFinder {
     }
 
     return bestPatterns;
-  }
-
-  /**
-   * <p>Orders by {@link FinderPattern#getEstimatedModuleSize()}</p>
-   */
-  private static final class EstimatedModuleComparator implements Comparator<FinderPattern>, Serializable {
-    @Override
-    public int compare(FinderPattern center1, FinderPattern center2) {
-      return Float.compare(center1.getEstimatedModuleSize(), center2.getEstimatedModuleSize());
-    }
   }
 
 }

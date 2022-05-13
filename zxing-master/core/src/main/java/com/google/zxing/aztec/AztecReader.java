@@ -16,21 +16,18 @@
 
 package com.google.zxing.aztec;
 
-import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.FormatException;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.Reader;
 import com.google.zxing.Result;
-import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.aztec.decoder.Decoder;
 import com.google.zxing.aztec.detector.Detector;
 import com.google.zxing.common.DecoderResult;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -95,24 +92,7 @@ public final class AztecReader implements Reader {
       }
     }
 
-    Result result = new Result(decoderResult.getText(),
-                               decoderResult.getRawBytes(),
-                               decoderResult.getNumBits(),
-                               points,
-                               BarcodeFormat.AZTEC,
-                               System.currentTimeMillis());
-
-    List<byte[]> byteSegments = decoderResult.getByteSegments();
-    if (byteSegments != null) {
-      result.putMetadata(ResultMetadataType.BYTE_SEGMENTS, byteSegments);
-    }
-    String ecLevel = decoderResult.getECLevel();
-    if (ecLevel != null) {
-      result.putMetadata(ResultMetadataType.ERROR_CORRECTION_LEVEL, ecLevel);
-    }
-    result.putMetadata(ResultMetadataType.SYMBOLOGY_IDENTIFIER, "]z" + decoderResult.getSymbologyModifier());
-
-    return result;
+    return decoderResult.aztecdecoded(points);
   }
 
   @Override

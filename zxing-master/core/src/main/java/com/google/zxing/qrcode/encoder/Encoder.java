@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2008 ZXing authors
  *
@@ -118,23 +119,23 @@ public final class Encoder {
       if (mode == Mode.BYTE && hasEncodingHint) {
         CharacterSetECI eci = CharacterSetECI.getCharacterSetECI(encoding);
         if (eci != null) {
-          appendECI(eci, headerBits);
+          EncoderAppendUtils.appendECI(eci, headerBits);
         }
       }
   
       // Append the FNC1 mode header for GS1 formatted data if applicable
       if (hasGS1FormatHint) {
         // GS1 formatted codes are prefixed with a FNC1 in first position mode header
-        appendModeInfo(Mode.FNC1_FIRST_POSITION, headerBits);
+        EncoderAppendUtils.appendModeInfo(Mode.FNC1_FIRST_POSITION, headerBits);
       }
     
       // (With ECI in place,) Write the mode marker
-      appendModeInfo(mode, headerBits);
+      EncoderAppendUtils.appendModeInfo(mode, headerBits);
   
       // Collect data within the main segment, separately, to count its size if needed. Don't add it to
       // main payload yet.
       BitArray dataBits = new BitArray();
-      appendBytes(content, mode, dataBits, encoding);
+      EncoderAppendUtils.appendBytes(content, mode, dataBits, encoding);
   
       if (hints != null && hints.containsKey(EncodeHintType.QR_VERSION)) {
         int versionNumber = Integer.parseInt(hints.get(EncodeHintType.QR_VERSION).toString());
@@ -151,7 +152,7 @@ public final class Encoder {
       headerAndDataBits.appendBitArray(headerBits);
       // Find "length" of main segment and write it
       int numLetters = mode == Mode.BYTE ? dataBits.getSizeInBytes() : content.length();
-      appendLengthInfo(numLetters, version, mode, headerAndDataBits);
+      EncoderAppendUtils.appendLengthInfo(numLetters, version, mode, headerAndDataBits);
       // Put data together into the overall payload
       headerAndDataBits.appendBitArray(dataBits);
     }
@@ -505,133 +506,23 @@ public final class Encoder {
     return ecBytes;
   }
 
-  /**
-   * Append mode info. On success, store the result in "bits".
-   */
-  static void appendModeInfo(Mode mode, BitArray bits) {
-    bits.appendBits(mode.getBits(), 4);
-  }
-
-
-  /**
-   * Append length info. On success, store the result in "bits".
-   */
-  static void appendLengthInfo(int numLetters, Version version, Mode mode, BitArray bits) throws WriterException {
-    int numBits = mode.getCharacterCountBits(version);
-    if (numLetters >= (1 << numBits)) {
-      throw new WriterException(numLetters + " is bigger than " + ((1 << numBits) - 1));
-    }
-    bits.appendBits(numLetters, numBits);
-  }
-
-  /**
-   * Append "bytes" in "mode" mode (encoding) into "bits". On success, store the result in "bits".
-   */
-  static void appendBytes(String content,
-                          Mode mode,
-                          BitArray bits,
-                          Charset encoding) throws WriterException {
-    switch (mode) {
-      case NUMERIC:
-        appendNumericBytes(content, bits);
-        break;
-      case ALPHANUMERIC:
-        appendAlphanumericBytes(content, bits);
-        break;
-      case BYTE:
-        append8BitBytes(content, bits, encoding);
-        break;
-      case KANJI:
-        appendKanjiBytes(content, bits);
-        break;
-      default:
-        throw new WriterException("Invalid mode: " + mode);
-    }
-  }
-
-  static void appendNumericBytes(CharSequence content, BitArray bits) {
-    int length = content.length();
-    int i = 0;
-    while (i < length) {
-      int num1 = content.charAt(i) - '0';
-      if (i + 2 < length) {
-        // Encode three numeric letters in ten bits.
-        int num2 = content.charAt(i + 1) - '0';
-        int num3 = content.charAt(i + 2) - '0';
-        bits.appendBits(num1 * 100 + num2 * 10 + num3, 10);
-        i += 3;
-      } else if (i + 1 < length) {
-        // Encode two numeric letters in seven bits.
-        int num2 = content.charAt(i + 1) - '0';
-        bits.appendBits(num1 * 10 + num2, 7);
-        i += 2;
-      } else {
-        // Encode one numeric letter in four bits.
-        bits.appendBits(num1, 4);
-        i++;
-      }
-    }
-  }
-
-  static void appendAlphanumericBytes(CharSequence content, BitArray bits) throws WriterException {
-    int length = content.length();
-    int i = 0;
-    while (i < length) {
-      int code1 = getAlphanumericCode(content.charAt(i));
-      if (code1 == -1) {
-        throw new WriterException();
-      }
-      if (i + 1 < length) {
-        int code2 = getAlphanumericCode(content.charAt(i + 1));
-        if (code2 == -1) {
-          throw new WriterException();
-        }
-        // Encode two alphanumeric letters in 11 bits.
-        bits.appendBits(code1 * 45 + code2, 11);
-        i += 2;
-      } else {
-        // Encode one alphanumeric letter in six bits.
-        bits.appendBits(code1, 6);
-        i++;
-      }
-    }
-  }
-
-  static void append8BitBytes(String content, BitArray bits, Charset encoding) {
-    byte[] bytes = content.getBytes(encoding);
-    for (byte b : bytes) {
-      bits.appendBits(b, 8);
-    }
-  }
-
-  static void appendKanjiBytes(String content, BitArray bits) throws WriterException {
-    byte[] bytes = content.getBytes(StringUtils.SHIFT_JIS_CHARSET);
-    if (bytes.length % 2 != 0) {
-      throw new WriterException("Kanji byte size not even");
-    }
-    int maxI = bytes.length - 1; // bytes.length must be even
-    for (int i = 0; i < maxI; i += 2) {
-      int byte1 = bytes[i] & 0xFF;
-      int byte2 = bytes[i + 1] & 0xFF;
-      int code = (byte1 << 8) | byte2;
-      int subtracted = -1;
-      if (code >= 0x8140 && code <= 0x9ffc) {
-        subtracted = code - 0x8140;
-      } else if (code >= 0xe040 && code <= 0xebbf) {
-        subtracted = code - 0xc140;
-      }
-      if (subtracted == -1) {
-        throw new WriterException("Invalid byte sequence");
-      }
-      int encoded = ((subtracted >> 8) * 0xc0) + (subtracted & 0xff);
-      bits.appendBits(encoded, 13);
-    }
-  }
-
-  private static void appendECI(CharacterSetECI eci, BitArray bits) {
-    bits.appendBits(Mode.ECI.getBits(), 4);
-    // This is correct for values up to 127, which is all we need now.
-    bits.appendBits(eci.getValue(), 8);
-  }
+  static void bitsChecker(CharSequence content, BitArray bits, int length, int i) {
+	while (i < length) {
+		int num1 = content.charAt(i) - '0';
+		if (i + 2 < length) {
+			int num2 = content.charAt(i + 1) - '0';
+			int num3 = content.charAt(i + 2) - '0';
+			bits.appendBits(num1 * 100 + num2 * 10 + num3, 10);
+			i += 3;
+		} else if (i + 1 < length) {
+			int num2 = content.charAt(i + 1) - '0';
+			bits.appendBits(num1 * 10 + num2, 7);
+			i += 2;
+		} else {
+			bits.appendBits(num1, 4);
+			i++;
+		}
+	}
+}
 
 }

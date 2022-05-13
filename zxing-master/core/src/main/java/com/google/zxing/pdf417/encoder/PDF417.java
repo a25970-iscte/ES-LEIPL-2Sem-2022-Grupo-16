@@ -29,7 +29,8 @@ import java.nio.charset.Charset;
  */
 public final class PDF417 {
 
-  /**
+  private PDF417Dimensions pDF417Dimensions = new PDF417Dimensions();
+/**
    * The start pattern (17 bits)
    */
   private static final int START_PATTERN = 0x1fea8;
@@ -508,19 +509,14 @@ public final class PDF417 {
           0x107a4, 0x107a2, 0x10396, 0x107b6, 0x187d4, 0x187d2,
           0x10794, 0x10fb4, 0x10792, 0x10fb2, 0x1c7ea}};
 
-  private static final float PREFERRED_RATIO = 3.0f;
-  private static final float DEFAULT_MODULE_WIDTH = 0.357f; //1px in mm
-  private static final float HEIGHT = 2.0f; //mm
+  public static final float PREFERRED_RATIO = 3.0f;
+  public static final float DEFAULT_MODULE_WIDTH = 0.357f; //1px in mm
+  public static final float HEIGHT = 2.0f; //mm
 
   private BarcodeMatrix barcodeMatrix;
   private boolean compact;
   private Compaction compaction;
   private Charset encoding;
-  private int minCols;
-  private int maxCols;
-  private int maxRows;
-  private int minRows;
-
   public PDF417() {
     this(false);
   }
@@ -529,10 +525,10 @@ public final class PDF417 {
     this.compact = compact;
     compaction = Compaction.AUTO;
     encoding = null; // Use default
-    minCols = 2;
-    maxCols = 30;
-    maxRows = 30;
-    minRows = 2;
+    pDF417Dimensions.setMinCols(2);
+    pDF417Dimensions.setMaxCols(30);
+    pDF417Dimensions.setMaxRows(30);
+    pDF417Dimensions.setMinRows(2);
   }
 
   public BarcodeMatrix getBarcodeMatrix() {
@@ -549,7 +545,7 @@ public final class PDF417 {
    *          row indicator codewords)
    * @return the number of rows in the symbol (r)
    */
-  private static int calculateNumberOfRows(int m, int k, int c) {
+  public static int calculateNumberOfRows(int m, int k, int c) {
     int r = ((m + 1 + k) / c) + 1;
     if (c * r >= (m + 1 + k + c)) {
       r--;
@@ -659,7 +655,7 @@ public final class PDF417 {
     String highLevel = PDF417HighLevelEncoder.encodeHighLevel(msg, compaction, encoding, autoECI);
     int sourceCodeWords = highLevel.length();
 
-    int[] dimension = determineDimensions(sourceCodeWords, errorCorrectionCodeWords);
+    int[] dimension = pDF417Dimensions.determineDimensions(sourceCodeWords, errorCorrectionCodeWords);
 
     int cols = dimension[0];
     int rows = dimension[1];
@@ -689,56 +685,6 @@ public final class PDF417 {
   }
 
   /**
-   * Determine optimal nr of columns and rows for the specified number of
-   * codewords.
-   *
-   * @param sourceCodeWords number of code words
-   * @param errorCorrectionCodeWords number of error correction code words
-   * @return dimension object containing cols as width and rows as height
-   */
-  private int[] determineDimensions(int sourceCodeWords, int errorCorrectionCodeWords) throws WriterException {
-    float ratio = 0.0f;
-    int[] dimension = null;
-
-    for (int cols = minCols; cols <= maxCols; cols++) {
-
-      int rows = calculateNumberOfRows(sourceCodeWords, errorCorrectionCodeWords, cols);
-
-      if (rows < minRows) {
-        break;
-      }
-
-      if (rows > maxRows) {
-        continue;
-      }
-
-      float newRatio = ((float) (17 * cols + 69) * DEFAULT_MODULE_WIDTH) / (rows * HEIGHT);
-
-      // ignore if previous ratio is closer to preferred ratio
-      if (dimension != null && Math.abs(newRatio - PREFERRED_RATIO) > Math.abs(ratio - PREFERRED_RATIO)) {
-        continue;
-      }
-
-      ratio = newRatio;
-      dimension = new int[] {cols, rows};
-    }
-
-    // Handle case when min values were larger than necessary
-    if (dimension == null) {
-      int rows = calculateNumberOfRows(sourceCodeWords, errorCorrectionCodeWords, minCols);
-      if (rows < minRows) {
-        dimension = new int[]{minCols, minRows};
-      }
-    }
-
-    if (dimension == null) {
-      throw new WriterException("Unable to fit message in columns");
-    }
-
-    return dimension;
-  }
-
-  /**
    * Sets max/min row/col values
    *
    * @param maxCols maximum allowed columns
@@ -747,10 +693,7 @@ public final class PDF417 {
    * @param minRows minimum allowed rows
    */
   public void setDimensions(int maxCols, int minCols, int maxRows, int minRows) {
-    this.maxCols = maxCols;
-    this.minCols = minCols;
-    this.maxRows = maxRows;
-    this.minRows = minRows;
+    pDF417Dimensions.setDimensions(maxCols, minCols, maxRows, minRows);
   }
 
   /**
