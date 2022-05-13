@@ -40,6 +40,22 @@ import com.google.zxing.Result;
  */
 public final class ExpandedProductResultParser extends ResultParser {
 
+  private String rawText;
+  private String productID = null;
+  private String sscc = null;
+  private String lotNumber = null;
+  private String productionDate = null;
+  private String packagingDate = null;
+  private String bestBeforeDate = null;
+  private String expirationDate = null;
+  private String weight = null;
+  private String weightType = null;
+  private String weightIncrement = null;
+  private String price = null;
+  private String priceIncrement = null;
+  private String priceCurrency = null;
+  private Map<String, String> uncommonAIs = new HashMap<>();
+
   @Override
   public ExpandedProductParsedResult parse(Result result) {
     BarcodeFormat format = result.getBarcodeFormat();
@@ -47,22 +63,7 @@ public final class ExpandedProductResultParser extends ResultParser {
       // ExtendedProductParsedResult NOT created. Not a RSS Expanded barcode
       return null;
     }
-    String rawText = getMassagedText(result);
-
-    String productID = null;
-    String sscc = null;
-    String lotNumber = null;
-    String productionDate = null;
-    String packagingDate = null;
-    String bestBeforeDate = null;
-    String expirationDate = null;
-    String weight = null;
-    String weightType = null;
-    String weightIncrement = null;
-    String price = null;
-    String priceIncrement = null;
-    String priceCurrency = null;
-    Map<String,String> uncommonAIs = new HashMap<>();
+    rawText = getMassagedText(result);
 
     int i = 0;
 
@@ -99,44 +100,20 @@ public final class ExpandedProductResultParser extends ResultParser {
         case "17":
           expirationDate = value;
           break;
-        case "3100":
-        case "3101":
-        case "3102":
-        case "3103":
-        case "3104":
-        case "3105":
-        case "3106":
-        case "3107":
-        case "3108":
         case "3109":
           weight = value;
           weightType = ExpandedProductParsedResult.KILOGRAM;
           weightIncrement = ai.substring(3);
           break;
-        case "3200":
-        case "3201":
-        case "3202":
-        case "3203":
-        case "3204":
-        case "3205":
-        case "3206":
-        case "3207":
-        case "3208":
         case "3209":
           weight = value;
           weightType = ExpandedProductParsedResult.POUND;
           weightIncrement = ai.substring(3);
           break;
-        case "3920":
-        case "3921":
-        case "3922":
         case "3923":
           price = value;
           priceIncrement = ai.substring(3);
           break;
-        case "3930":
-        case "3931":
-        case "3932":
         case "3933":
           if (value.length() < 4) {
             // The value must have more of 3 symbols (3 for currency and
@@ -150,26 +127,32 @@ public final class ExpandedProductResultParser extends ResultParser {
           break;
         default:
           // No match with common AIs
-          uncommonAIs.put(ai, value);
+          String aisome = ai;
+          String[] strAr = { "3100", "3101", "3102", "3103", "3104", "3105", "3106", "3107", "3108", "3200", "3201",
+              "3202", "3203", "3204", "3205", "3206", "3207", "3208", "3920", "3921", "3922", "3930", "3931", "3932" };
+          for (int index = 0; index < strAr.length; index++) {
+            if (!aisome.equals(strAr[index]))
+              uncommonAIs.put(aisome, value);
+          }
           break;
       }
     }
 
     return new ExpandedProductParsedResult(rawText,
-                                           productID,
-                                           sscc,
-                                           lotNumber,
-                                           productionDate,
-                                           packagingDate,
-                                           bestBeforeDate,
-                                           expirationDate,
-                                           weight,
-                                           weightType,
-                                           weightIncrement,
-                                           price,
-                                           priceIncrement,
-                                           priceCurrency,
-                                           uncommonAIs);
+        productID,
+        sscc,
+        lotNumber,
+        productionDate,
+        packagingDate,
+        bestBeforeDate,
+        expirationDate,
+        weight,
+        weightType,
+        weightIncrement,
+        price,
+        priceIncrement,
+        priceCurrency,
+        uncommonAIs);
   }
 
   private static String findAIvalue(int i, String rawText) {
