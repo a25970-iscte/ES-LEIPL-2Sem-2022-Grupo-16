@@ -81,7 +81,7 @@ public final class ErrorCorrection {
 
     //sigma = sigma.multiply(knownErrors);
 
-    int[] errorLocations = findErrorLocations(sigma);
+    int[] errorLocations = sigma.findErrorLocations(field);
     int[] errorMagnitudes = findErrorMagnitudes(omega, sigma, errorLocations);
 
     for (int i = 0; i < errorLocations.length; i++) {
@@ -143,23 +143,6 @@ public final class ErrorCorrection {
     ModulusPoly sigma = t.multiply(inverse);
     ModulusPoly omega = r.multiply(inverse);
     return new ModulusPoly[]{sigma, omega};
-  }
-
-  private int[] findErrorLocations(ModulusPoly errorLocator) throws ChecksumException {
-    // This is a direct application of Chien's search
-    int numErrors = errorLocator.getDegree();
-    int[] result = new int[numErrors];
-    int e = 0;
-    for (int i = 1; i < field.getSize() && e < numErrors; i++) {
-      if (errorLocator.evaluateAt(i) == 0) {
-        result[e] = field.inverse(i);
-        e++;
-      }
-    }
-    if (e != numErrors) {
-      throw ChecksumException.getChecksumInstance();
-    }
-    return result;
   }
 
   private int[] findErrorMagnitudes(ModulusPoly errorEvaluator,

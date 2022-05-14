@@ -16,6 +16,8 @@
 
 package com.google.zxing.pdf417.decoder.ec;
 
+import com.google.zxing.ChecksumException;
+
 /**
  * @author Sean Owen
  */
@@ -229,5 +231,21 @@ final class ModulusPoly {
     }
     return result.toString();
   }
+
+public int[] findErrorLocations(ModulusGF field) throws ChecksumException {
+	int numErrors = getDegree();
+	int[] result = new int[numErrors];
+	int e = 0;
+	for (int i = 1; i < field.getSize() && e < numErrors; i++) {
+		if (evaluateAt(i) == 0) {
+			result[e] = field.inverse(i);
+			e++;
+		}
+	}
+	if (e != numErrors) {
+		throw ChecksumException.getChecksumInstance();
+	}
+	return result;
+}
 
 }
