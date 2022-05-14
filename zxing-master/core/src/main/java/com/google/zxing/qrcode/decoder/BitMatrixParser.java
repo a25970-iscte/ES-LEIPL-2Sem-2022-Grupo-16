@@ -24,11 +24,8 @@ import com.google.zxing.common.BitMatrix;
  */
 final class BitMatrixParser {
 
-  private final BitMatrix bitMatrix;
-  private Version parsedVersion;
-  private FormatInformation parsedFormatInfo;
-  private boolean mirror;
-
+  private BitMatrixParserMirror bitMatrixParserMirror = new BitMatrixParserMirror();
+private final BitMatrix bitMatrix;
   /**
    * @param bitMatrix {@link BitMatrix} to parse
    * @throws FormatException if dimension is not >= 21 and 1 mod 4
@@ -50,22 +47,22 @@ final class BitMatrixParser {
    */
   FormatInformation readFormatInformation() throws FormatException {
 
-    if (parsedFormatInfo != null) {
-      return parsedFormatInfo;
+    if (bitMatrixParserMirror.getParsedFormatInfo() != null) {
+      return bitMatrixParserMirror.getParsedFormatInfo();
     }
 
     // Read top-left format info bits
     int formatInfoBits1 = 0;
     for (int i = 0; i < 6; i++) {
-      formatInfoBits1 = copyBit(i, 8, formatInfoBits1);
+      formatInfoBits1 = bitMatrixParserMirror.copyBit(i, 8, formatInfoBits1, this.bitMatrix);
     }
     // .. and skip a bit in the timing pattern ...
-    formatInfoBits1 = copyBit(7, 8, formatInfoBits1);
-    formatInfoBits1 = copyBit(8, 8, formatInfoBits1);
-    formatInfoBits1 = copyBit(8, 7, formatInfoBits1);
+    formatInfoBits1 = bitMatrixParserMirror.copyBit(7, 8, formatInfoBits1, this.bitMatrix);
+    formatInfoBits1 = bitMatrixParserMirror.copyBit(8, 8, formatInfoBits1, this.bitMatrix);
+    formatInfoBits1 = bitMatrixParserMirror.copyBit(8, 7, formatInfoBits1, this.bitMatrix);
     // .. and skip a bit in the timing pattern ...
     for (int j = 5; j >= 0; j--) {
-      formatInfoBits1 = copyBit(8, j, formatInfoBits1);
+      formatInfoBits1 = bitMatrixParserMirror.copyBit(8, j, formatInfoBits1, this.bitMatrix);
     }
 
     // Read the top-right/bottom-left pattern too
@@ -73,15 +70,16 @@ final class BitMatrixParser {
     int formatInfoBits2 = 0;
     int jMin = dimension - 7;
     for (int j = dimension - 1; j >= jMin; j--) {
-      formatInfoBits2 = copyBit(8, j, formatInfoBits2);
+      formatInfoBits2 = bitMatrixParserMirror.copyBit(8, j, formatInfoBits2, this.bitMatrix);
     }
     for (int i = dimension - 8; i < dimension; i++) {
-      formatInfoBits2 = copyBit(i, 8, formatInfoBits2);
+      formatInfoBits2 = bitMatrixParserMirror.copyBit(i, 8, formatInfoBits2, this.bitMatrix);
     }
 
-    parsedFormatInfo = FormatInformation.decodeFormatInformation(formatInfoBits1, formatInfoBits2);
-    if (parsedFormatInfo != null) {
-      return parsedFormatInfo;
+    bitMatrixParserMirror
+			.setParsedFormatInfo(FormatInformation.decodeFormatInformation(formatInfoBits1, formatInfoBits2));
+    if (bitMatrixParserMirror.getParsedFormatInfo() != null) {
+      return bitMatrixParserMirror.getParsedFormatInfo();
     }
     throw FormatException.getFormatInstance();
   }
@@ -95,8 +93,8 @@ final class BitMatrixParser {
    */
   Version readVersion() throws FormatException {
 
-    if (parsedVersion != null) {
-      return parsedVersion;
+    if (bitMatrixParserMirror.getParsedVersion() != null) {
+      return bitMatrixParserMirror.getParsedVersion();
     }
 
     int dimension = bitMatrix.getHeight();
@@ -111,13 +109,13 @@ final class BitMatrixParser {
     int ijMin = dimension - 11;
     for (int j = 5; j >= 0; j--) {
       for (int i = dimension - 9; i >= ijMin; i--) {
-        versionBits = copyBit(i, j, versionBits);
+        versionBits = bitMatrixParserMirror.copyBit(i, j, versionBits, this.bitMatrix);
       }
     }
 
     Version theParsedVersion = Version.decodeVersionInformation(versionBits);
     if (theParsedVersion != null && theParsedVersion.getDimensionForVersion() == dimension) {
-      parsedVersion = theParsedVersion;
+      bitMatrixParserMirror.setParsedVersion(theParsedVersion);
       return theParsedVersion;
     }
 
@@ -125,21 +123,16 @@ final class BitMatrixParser {
     versionBits = 0;
     for (int i = 5; i >= 0; i--) {
       for (int j = dimension - 9; j >= ijMin; j--) {
-        versionBits = copyBit(i, j, versionBits);
+        versionBits = bitMatrixParserMirror.copyBit(i, j, versionBits, this.bitMatrix);
       }
     }
 
     theParsedVersion = Version.decodeVersionInformation(versionBits);
     if (theParsedVersion != null && theParsedVersion.getDimensionForVersion() == dimension) {
-      parsedVersion = theParsedVersion;
+      bitMatrixParserMirror.setParsedVersion(theParsedVersion);
       return theParsedVersion;
     }
     throw FormatException.getFormatInstance();
-  }
-
-  private int copyBit(int i, int j, int versionBits) {
-    boolean bit = mirror ? bitMatrix.get(j, i) : bitMatrix.get(i, j);
-    return bit ? (versionBits << 1) | 0x1 : versionBits << 1;
   }
 
   /**
@@ -208,10 +201,10 @@ final class BitMatrixParser {
    * Revert the mask removal done while reading the code words. The bit matrix should revert to its original state.
    */
   void remask() {
-    if (parsedFormatInfo == null) {
+    if (bitMatrixParserMirror.getParsedFormatInfo() == null) {
       return; // We have no format information, and have no data mask
     }
-    DataMask dataMask = DataMask.values()[parsedFormatInfo.getDataMask()];
+    DataMask dataMask = DataMask.values()[bitMatrixParserMirror.getParsedFormatInfo().getDataMask()];
     int dimension = bitMatrix.getHeight();
     dataMask.unmaskBitMatrix(bitMatrix, dimension);
   }
@@ -225,9 +218,7 @@ final class BitMatrixParser {
    * @param mirror Whether to read version and format information mirrored.
    */
   void setMirror(boolean mirror) {
-    parsedVersion = null;
-    parsedFormatInfo = null;
-    this.mirror = mirror;
+    bitMatrixParserMirror.setMirror(mirror);
   }
 
   /** Mirror the bit matrix in order to attempt a second reading. */
