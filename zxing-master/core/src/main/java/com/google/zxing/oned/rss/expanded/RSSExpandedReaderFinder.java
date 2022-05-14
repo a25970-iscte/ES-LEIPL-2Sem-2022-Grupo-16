@@ -17,7 +17,7 @@ public class RSSExpandedReaderFinder {
 		int forcedOffset = -1;
 		do {
 			this.findNextPair(row, previousPairs, forcedOffset, thisStartFromEven, rSSExpandedReader);
-			pattern = parseFoundFinderPattern(row, rowNumber, isOddPattern, rSSExpandedReader);
+			pattern = row.parseFoundFinderPattern(rowNumber, isOddPattern, rSSExpandedReader, startEnd);
 			if (pattern == null) {
 				forcedOffset = getNextSecondBar(row, this.startEnd[0]);
 			} else {
@@ -88,37 +88,6 @@ public class RSSExpandedReaderFinder {
 			}
 		}
 		throw NotFoundException.getNotFoundInstance();
-	}
-
-	public FinderPattern parseFoundFinderPattern(BitArray row, int rowNumber, boolean oddPattern,
-			RSSExpandedReader rSSExpandedReader) {
-		int firstCounter;
-		int start;
-		int end;
-		if (oddPattern) {
-			int firstElementStart = this.startEnd[0] - 1;
-			while (firstElementStart >= 0 && !row.get(firstElementStart)) {
-				firstElementStart--;
-			}
-			firstElementStart++;
-			firstCounter = this.startEnd[0] - firstElementStart;
-			start = firstElementStart;
-			end = this.startEnd[1];
-		} else {
-			start = this.startEnd[0];
-			end = row.getNextUnset(this.startEnd[1] + 1);
-			firstCounter = end - this.startEnd[1];
-		}
-		int[] counters = rSSExpandedReader.getDecodeFinderCounters();
-		System.arraycopy(counters, 0, counters, 1, counters.length - 1);
-		counters[0] = firstCounter;
-		int value;
-		try {
-			value = RSSExpandedReader.parseFinderValue(counters, RSSExpandedReader.FINDER_PATTERNS);
-		} catch (NotFoundException ignored) {
-			return null;
-		}
-		return new FinderPattern(value, new int[] { start, end }, start, end, rowNumber);
 	}
 
 	public static int getNextSecondBar(BitArray row, int initialPos) {

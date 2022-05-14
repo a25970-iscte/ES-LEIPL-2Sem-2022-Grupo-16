@@ -16,6 +16,9 @@
 
 package com.google.zxing.common;
 
+import com.google.zxing.NotFoundException;
+import com.google.zxing.oned.rss.FinderPattern;
+import com.google.zxing.oned.rss.expanded.RSSExpandedReader;
 import java.util.Arrays;
 
 /**
@@ -355,5 +358,36 @@ public final class BitArray implements Cloneable {
   public BitArray clone() {
     return new BitArray(bits.clone(), size);
   }
+
+public FinderPattern parseFoundFinderPattern(int rowNumber, boolean oddPattern, RSSExpandedReader rSSExpandedReader,
+		int[] startEnd) {
+	int firstCounter;
+	int start;
+	int end;
+	if (oddPattern) {
+		int firstElementStart = startEnd[0] - 1;
+		while (firstElementStart >= 0 && !get(firstElementStart)) {
+			firstElementStart--;
+		}
+		firstElementStart++;
+		firstCounter = startEnd[0] - firstElementStart;
+		start = firstElementStart;
+		end = startEnd[1];
+	} else {
+		start = startEnd[0];
+		end = getNextUnset(startEnd[1] + 1);
+		firstCounter = end - startEnd[1];
+	}
+	int[] counters = rSSExpandedReader.getDecodeFinderCounters();
+	System.arraycopy(counters, 0, counters, 1, counters.length - 1);
+	counters[0] = firstCounter;
+	int value;
+	try {
+		value = RSSExpandedReader.parseFinderValue(counters, RSSExpandedReader.FINDER_PATTERNS);
+	} catch (NotFoundException ignored) {
+		return null;
+	}
+	return new FinderPattern(value, new int[] { start, end }, start, end, rowNumber);
+}
 
 }
