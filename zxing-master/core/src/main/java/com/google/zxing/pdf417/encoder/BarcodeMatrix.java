@@ -23,23 +23,20 @@ package com.google.zxing.pdf417.encoder;
  */
 public final class BarcodeMatrix {
 
-  private final BarcodeRow[] matrix;
+  private BarcodeMatrixScaled barcodeMatrixScaled;
+private final BarcodeRow[] matrix;
   private int currentRow;
-  private final int height;
-  private final int width;
-
   /**
    * @param height the height of the matrix (Rows)
    * @param width  the width of the matrix (Cols)
    */
   BarcodeMatrix(int height, int width) {
-    matrix = new BarcodeRow[height];
+    this.barcodeMatrixScaled = new BarcodeMatrixScaled(width, height);
+	matrix = new BarcodeRow[height];
     //Initializes the array to the correct width
     for (int i = 0, matrixLength = matrix.length; i < matrixLength; i++) {
       matrix[i] = new BarcodeRow((width + 4) * 17 + 1);
     }
-    this.width = width * 17;
-    this.height = height;
     this.currentRow = -1;
   }
 
@@ -56,15 +53,10 @@ public final class BarcodeMatrix {
   }
 
   public byte[][] getMatrix() {
-    return getScaledMatrix(1, 1);
+    return barcodeMatrixScaled.getScaledMatrix(1, 1, this.matrix);
   }
 
   public byte[][] getScaledMatrix(int xScale, int yScale) {
-    byte[][] matrixOut = new byte[height * yScale][width * xScale];
-    int yMax = height * yScale;
-    for (int i = 0; i < yMax; i++) {
-      matrixOut[yMax - i - 1] = matrix[i / yScale].getScaledRow(xScale);
-    }
-    return matrixOut;
+    return barcodeMatrixScaled.getScaledMatrix(xScale, yScale, this.matrix);
   }
 }
