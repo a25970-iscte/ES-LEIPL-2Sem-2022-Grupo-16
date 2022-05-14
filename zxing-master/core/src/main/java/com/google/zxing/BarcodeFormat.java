@@ -25,7 +25,7 @@ package com.google.zxing;
 
 //2Teste de commit
 public enum BarcodeFormat {
-
+//Teste 14-05
   /** Aztec 2D barcode format. */
   AZTEC,
 //3 Teste
