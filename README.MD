@@ -24,7 +24,7 @@ Joao Raposo 93335
   - [x] Extracção métricas qualidade do código
   - [x] Registo de code-smells em Excel
   - [x] Análise de métricas de código
-  - [ ] Dissecar code-smells
+  - [x] Dissecar code-smells
   - [ ] Execução de testes
   - [ ] Criação do JAVADOC final
   - [ ] Produção e entrega final no GitHub
