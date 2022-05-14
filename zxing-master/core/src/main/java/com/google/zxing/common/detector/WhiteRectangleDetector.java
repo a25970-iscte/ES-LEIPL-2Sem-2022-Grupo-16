@@ -32,10 +32,10 @@ import com.google.zxing.common.BitMatrix;
  */
 public final class WhiteRectangleDetector {
 
-  private static final int INIT_SIZE = 10;
+  private WhiteRectangleDetectorBitMatrix whiteRectangleDetectorBitMatrix;
+private static final int INIT_SIZE = 10;
   private static final int CORR = 1;
 
-  private final BitMatrix image;
   private final int height;
   private final int width;
   private final int leftInit;
@@ -55,8 +55,8 @@ public final class WhiteRectangleDetector {
    * @throws NotFoundException if image is too small to accommodate {@code initSize}
    */
   public WhiteRectangleDetector(BitMatrix image, int initSize, int x, int y) throws NotFoundException {
-    this.image = image;
-    height = image.getHeight();
+    this.whiteRectangleDetectorBitMatrix = new WhiteRectangleDetectorBitMatrix(image);
+	height = image.getHeight();
     width = image.getWidth();
     int halfsize = initSize / 2;
     leftInit = x - halfsize;
@@ -105,7 +105,7 @@ public final class WhiteRectangleDetector {
       // .....
       boolean rightBorderNotWhite = true;
       while ((rightBorderNotWhite || !atLeastOneBlackPointFoundOnRight) && right < width) {
-        rightBorderNotWhite = containsBlackPoint(up, down, right, false);
+        rightBorderNotWhite = whiteRectangleDetectorBitMatrix.containsBlackPoint(up, down, right, false);
         if (rightBorderNotWhite) {
           right++;
           aBlackPointFoundOnBorder = true;
@@ -125,7 +125,7 @@ public final class WhiteRectangleDetector {
       // .___.
       boolean bottomBorderNotWhite = true;
       while ((bottomBorderNotWhite || !atLeastOneBlackPointFoundOnBottom) && down < height) {
-        bottomBorderNotWhite = containsBlackPoint(left, right, down, true);
+        bottomBorderNotWhite = whiteRectangleDetectorBitMatrix.containsBlackPoint(left, right, down, true);
         if (bottomBorderNotWhite) {
           down++;
           aBlackPointFoundOnBorder = true;
@@ -145,7 +145,7 @@ public final class WhiteRectangleDetector {
       // .....
       boolean leftBorderNotWhite = true;
       while ((leftBorderNotWhite || !atLeastOneBlackPointFoundOnLeft) && left >= 0) {
-        leftBorderNotWhite = containsBlackPoint(up, down, left, false);
+        leftBorderNotWhite = whiteRectangleDetectorBitMatrix.containsBlackPoint(up, down, left, false);
         if (leftBorderNotWhite) {
           left--;
           aBlackPointFoundOnBorder = true;
@@ -165,7 +165,7 @@ public final class WhiteRectangleDetector {
       // .....
       boolean topBorderNotWhite = true;
       while ((topBorderNotWhite || !atLeastOneBlackPointFoundOnTop) && up >= 0) {
-        topBorderNotWhite = containsBlackPoint(left, right, up, true);
+        topBorderNotWhite = whiteRectangleDetectorBitMatrix.containsBlackPoint(left, right, up, true);
         if (topBorderNotWhite) {
           up--;
           aBlackPointFoundOnBorder = true;
@@ -188,7 +188,7 @@ public final class WhiteRectangleDetector {
 
       ResultPoint z = null;
       for (int i = 1; z == null && i < maxSize; i++) {
-        z = getBlackPointOnSegment(left, down - i, left + i, down);
+        z = whiteRectangleDetectorBitMatrix.getBlackPointOnSegment(left, down - i, left + i, down);
       }
 
       if (z == null) {
@@ -198,7 +198,7 @@ public final class WhiteRectangleDetector {
       ResultPoint t = null;
       //go down right
       for (int i = 1; t == null && i < maxSize; i++) {
-        t = getBlackPointOnSegment(left, up + i, left + i, up);
+        t = whiteRectangleDetectorBitMatrix.getBlackPointOnSegment(left, up + i, left + i, up);
       }
 
       if (t == null) {
@@ -208,7 +208,7 @@ public final class WhiteRectangleDetector {
       ResultPoint x = null;
       //go down left
       for (int i = 1; x == null && i < maxSize; i++) {
-        x = getBlackPointOnSegment(right, up + i, right - i, up);
+        x = whiteRectangleDetectorBitMatrix.getBlackPointOnSegment(right, up + i, right - i, up);
       }
 
       if (x == null) {
@@ -218,7 +218,7 @@ public final class WhiteRectangleDetector {
       ResultPoint y = null;
       //go up left
       for (int i = 1; y == null && i < maxSize; i++) {
-        y = getBlackPointOnSegment(right, down - i, right - i, down);
+        y = whiteRectangleDetectorBitMatrix.getBlackPointOnSegment(right, down - i, right - i, down);
       }
 
       if (y == null) {
@@ -230,21 +230,6 @@ public final class WhiteRectangleDetector {
     } else {
       throw NotFoundException.getNotFoundInstance();
     }
-  }
-
-  private ResultPoint getBlackPointOnSegment(float aX, float aY, float bX, float bY) {
-    int dist = MathUtils.round(MathUtils.distance(aX, aY, bX, bY));
-    float xStep = (bX - aX) / dist;
-    float yStep = (bY - aY) / dist;
-
-    for (int i = 0; i < dist; i++) {
-      int x = MathUtils.round(aX + i * xStep);
-      int y = MathUtils.round(aY + i * yStep);
-      if (image.get(x, y)) {
-        return new ResultPoint(x, y);
-      }
-    }
-    return null;
   }
 
   /**
@@ -292,34 +277,6 @@ public final class WhiteRectangleDetector {
           new ResultPoint(xi - CORR, xj + CORR),
           new ResultPoint(yi - CORR, yj - CORR)};
     }
-  }
-
-  /**
-   * Determines whether a segment contains a black point
-   *
-   * @param a          min value of the scanned coordinate
-   * @param b          max value of the scanned coordinate
-   * @param fixed      value of fixed coordinate
-   * @param horizontal set to true if scan must be horizontal, false if vertical
-   * @return true if a black point has been found, else false.
-   */
-  private boolean containsBlackPoint(int a, int b, int fixed, boolean horizontal) {
-
-    if (horizontal) {
-      for (int x = a; x <= b; x++) {
-        if (image.get(x, fixed)) {
-          return true;
-        }
-      }
-    } else {
-      for (int y = a; y <= b; y++) {
-        if (image.get(fixed, y)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
 }
