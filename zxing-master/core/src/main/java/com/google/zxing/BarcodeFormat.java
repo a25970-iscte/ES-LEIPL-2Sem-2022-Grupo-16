@@ -21,7 +21,7 @@ package com.google.zxing;
  *
  * @author Sean Owen
  */
-// Teste de commit
+// 14-05-2022 Teste de commit
 
 //2Teste de commit
 public enum BarcodeFormat {
