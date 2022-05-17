@@ -20,10 +20,7 @@ import com.google.zxing.Result;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,12 +35,12 @@ public final class VCardResultParser extends ResultParser {
 
   private static final Pattern BEGIN_VCARD = Pattern.compile("BEGIN:VCARD", Pattern.CASE_INSENSITIVE);
   private static final Pattern VCARD_LIKE_DATE = Pattern.compile("\\d{4}-?\\d{2}-?\\d{2}");
-  private static final Pattern CR_LF_SPACE_TAB = Pattern.compile("\r\n[ \t]");
-  private static final Pattern NEWLINE_ESCAPE = Pattern.compile("\\\\[nN]");
-  private static final Pattern VCARD_ESCAPES = Pattern.compile("\\\\([,;\\\\])");
-  private static final Pattern EQUALS = Pattern.compile("=");
-  private static final Pattern SEMICOLON = Pattern.compile(";");
-  private static final Pattern UNESCAPED_SEMICOLONS = Pattern.compile("(?<!\\\\);+");
+  static final Pattern CR_LF_SPACE_TAB = Pattern.compile("\r\n[ \t]");
+  static final Pattern NEWLINE_ESCAPE = Pattern.compile("\\\\[nN]");
+  static final Pattern VCARD_ESCAPES = Pattern.compile("\\\\([,;\\\\])");
+  static final Pattern EQUALS = Pattern.compile("=");
+  static final Pattern SEMICOLON = Pattern.compile(";");
+  static final Pattern UNESCAPED_SEMICOLONS = Pattern.compile("(?<!\\\\);+");
   private static final Pattern COMMA = Pattern.compile(",");
   private static final Pattern SEMICOLON_OR_COMMA = Pattern.compile("[;,]");
 
@@ -57,158 +54,50 @@ public final class VCardResultParser extends ResultParser {
     if (!m.find() || m.start() != 0) {
       return null;
     }
-    List<List<String>> names = matchVCardPrefixedField("FN", rawText, true, false);
+    List<List<String>> names = AddressBookParsedResult.matchVCardPrefixedField("FN", rawText, true, false);
     if (names == null) {
       // If no display names found, look for regular name fields and format them
-      names = matchVCardPrefixedField("N", rawText, true, false);
+      names = AddressBookParsedResult.matchVCardPrefixedField("N", rawText, true, false);
       formatNames(names);
     }
     List<String> nicknameString = matchSingleVCardPrefixedField("NICKNAME", rawText, true, false);
     String[] nicknames = nicknameString == null ? null : COMMA.split(nicknameString.get(0));
-    List<List<String>> phoneNumbers = matchVCardPrefixedField("TEL", rawText, true, false);
-    List<List<String>> emails = matchVCardPrefixedField("EMAIL", rawText, true, false);
+    List<List<String>> phoneNumbers = AddressBookParsedResult.matchVCardPrefixedField("TEL", rawText, true, false);
+    List<List<String>> emails = AddressBookParsedResult.matchVCardPrefixedField("EMAIL", rawText, true, false);
     List<String> note = matchSingleVCardPrefixedField("NOTE", rawText, false, false);
-    List<List<String>> addresses = matchVCardPrefixedField("ADR", rawText, true, true);
+    List<List<String>> addresses = AddressBookParsedResult.matchVCardPrefixedField("ADR", rawText, true, true);
     List<String> org = matchSingleVCardPrefixedField("ORG", rawText, true, true);
     List<String> birthday = matchSingleVCardPrefixedField("BDAY", rawText, true, false);
     if (birthday != null && !isLikeVCardDate(birthday.get(0))) {
       birthday = null;
     }
     List<String> title = matchSingleVCardPrefixedField("TITLE", rawText, true, false);
-    List<List<String>> urls = matchVCardPrefixedField("URL", rawText, true, false);
+    List<List<String>> urls = AddressBookParsedResult.matchVCardPrefixedField("URL", rawText, true, false);
     List<String> instantMessenger = matchSingleVCardPrefixedField("IMPP", rawText, true, false);
     List<String> geoString = matchSingleVCardPrefixedField("GEO", rawText, true, false);
     String[] geo = geoString == null ? null : SEMICOLON_OR_COMMA.split(geoString.get(0));
     if (geo != null && geo.length != 2) {
       geo = null;
     }
-    return new AddressBookParsedResult(toPrimaryValues(names),
+    return new AddressBookParsedResult(AddressBookParsedResult.toPrimaryValues(names),
                                        nicknames,
                                        null, 
-                                       toPrimaryValues(phoneNumbers), 
-                                       toTypes(phoneNumbers),
-                                       toPrimaryValues(emails),
-                                       toTypes(emails),
-                                       toPrimaryValue(instantMessenger),
-                                       toPrimaryValue(note),
-                                       toPrimaryValues(addresses),
-                                       toTypes(addresses),
-                                       toPrimaryValue(org),
-                                       toPrimaryValue(birthday),
-                                       toPrimaryValue(title),
-                                       toPrimaryValues(urls),
+                                       AddressBookParsedResult.toPrimaryValues(phoneNumbers), 
+                                       AddressBookParsedResult.toTypes(phoneNumbers),
+                                       AddressBookParsedResult.toPrimaryValues(emails),
+                                       AddressBookParsedResult.toTypes(emails),
+                                       AddressBookParsedResult.toPrimaryValue(instantMessenger),
+                                       AddressBookParsedResult.toPrimaryValue(note),
+                                       AddressBookParsedResult.toPrimaryValues(addresses),
+                                       AddressBookParsedResult.toTypes(addresses),
+                                       AddressBookParsedResult.toPrimaryValue(org),
+                                       AddressBookParsedResult.toPrimaryValue(birthday),
+                                       AddressBookParsedResult.toPrimaryValue(title),
+                                       AddressBookParsedResult.toPrimaryValues(urls),
                                        geo);
   }
 
-  static List<List<String>> matchVCardPrefixedField(CharSequence prefix,
-                                                    String rawText,
-                                                    boolean trim,
-                                                    boolean parseFieldDivider) {
-    List<List<String>> matches = null;
-    int i = 0;
-    int max = rawText.length();
-
-    while (i < max) {
-
-      // At start or after newline, match prefix, followed by optional metadata 
-      // (led by ;) ultimately ending in colon
-      Matcher matcher = Pattern.compile("(?:^|\n)" + prefix + "(?:;([^:]*))?:",
-                                        Pattern.CASE_INSENSITIVE).matcher(rawText);
-      if (i > 0) {
-        i--; // Find from i-1 not i since looking at the preceding character
-      }
-      if (!matcher.find(i)) {
-        break;
-      }
-      i = matcher.end(0); // group 0 = whole pattern; end(0) is past final colon
-
-      String metadataString = matcher.group(1); // group 1 = metadata substring
-      List<String> metadata = null;
-      boolean quotedPrintable = false;
-      String quotedPrintableCharset = null;
-      String valueType = null;
-      if (metadataString != null) {
-        for (String metadatum : SEMICOLON.split(metadataString)) {
-          if (metadata == null) {
-            metadata = new ArrayList<>(1);
-          }
-          metadata.add(metadatum);
-          String[] metadatumTokens = EQUALS.split(metadatum, 2);
-          if (metadatumTokens.length > 1) {
-            String key = metadatumTokens[0];
-            String value = metadatumTokens[1];
-            if ("ENCODING".equalsIgnoreCase(key) && "QUOTED-PRINTABLE".equalsIgnoreCase(value)) {
-              quotedPrintable = true;
-            } else if ("CHARSET".equalsIgnoreCase(key)) {
-              quotedPrintableCharset = value;
-            } else if ("VALUE".equalsIgnoreCase(key)) {
-              valueType = value;
-            }
-          }
-        }
-      }
-
-      int matchStart = i; // Found the start of a match here
-
-      i = followedByTabOrSpace(rawText, i, quotedPrintable);
-
-      if (i < 0) {
-        // No terminating end character? uh, done. Set i such that loop terminates and break
-        i = max;
-      } else if (i > matchStart) {
-        // found a match
-        if (matches == null) {
-          matches = new ArrayList<>(1); // lazy init
-        }
-        if (i >= 1 && rawText.charAt(i - 1) == '\r') {
-          i--; // Back up over \r, which really should be there
-        }
-        String element = rawText.substring(matchStart, i);
-        if (trim) {
-          element = element.trim();
-        }
-        if (quotedPrintable) {
-          element = decodeQuotedPrintable(element, quotedPrintableCharset);
-          if (parseFieldDivider) {
-            element = UNESCAPED_SEMICOLONS.matcher(element).replaceAll("\n").trim();
-          }
-        } else {
-          if (parseFieldDivider) {
-            element = UNESCAPED_SEMICOLONS.matcher(element).replaceAll("\n").trim();
-          }
-          element = CR_LF_SPACE_TAB.matcher(element).replaceAll("");
-          element = NEWLINE_ESCAPE.matcher(element).replaceAll("\n");
-          element = VCARD_ESCAPES.matcher(element).replaceAll("$1");
-        }
-        // Only handle VALUE=uri specially
-        if ("uri".equals(valueType)) {
-          // Don't actually support dereferencing URIs, but use scheme-specific part not URI
-          // as value, to support tel: and mailto:
-          try {
-            element = URI.create(element).getSchemeSpecificPart();
-          } catch (IllegalArgumentException iae) {
-            // ignore
-          }
-        }
-        if (metadata == null) {
-          List<String> match = new ArrayList<>(1);
-          match.add(element);
-          matches.add(match);
-        } else {
-          metadata.add(0, element);
-          matches.add(metadata);
-        }
-        i++;
-      } else {
-        i++;
-      }
-
-    }
-
-    return matches;
-  }
-
-  private static int followedByTabOrSpace(String rawText, int i, boolean quotedPrintable) {
+  static int followedByTabOrSpace(String rawText, int i, boolean quotedPrintable) {
     while ((i = rawText.indexOf('\n', i)) >= 0) { // Really, end in \r\n
       if (i < rawText.length() - 1 &&           // But if followed by tab or space,
           (rawText.charAt(i + 1) == ' ' ||        // this is only a continuation
@@ -225,7 +114,7 @@ public final class VCardResultParser extends ResultParser {
     return i;
   }
 
-  private static String decodeQuotedPrintable(CharSequence value, String charset) {
+  static String decodeQuotedPrintable(CharSequence value, String charset) {
     int length = value.length();
     StringBuilder result = new StringBuilder(length);
     ByteArrayOutputStream fragmentBuffer = new ByteArrayOutputStream();
@@ -282,56 +171,10 @@ public final class VCardResultParser extends ResultParser {
                                                     String rawText,
                                                     boolean trim,
                                                     boolean parseFieldDivider) {
-    List<List<String>> values = matchVCardPrefixedField(prefix, rawText, trim, parseFieldDivider);
+    List<List<String>> values = AddressBookParsedResult.matchVCardPrefixedField(prefix, rawText, trim, parseFieldDivider);
     return values == null || values.isEmpty() ? null : values.get(0);
   }
   
-  private static String toPrimaryValue(List<String> list) {
-    return list == null || list.isEmpty() ? null : list.get(0);
-  }
-  
-  private static String[] toPrimaryValues(Collection<List<String>> lists) {
-    if (lists == null || lists.isEmpty()) {
-      return null;
-    }
-    List<String> result = new ArrayList<>(lists.size());
-    for (List<String> list : lists) {
-      String value = list.get(0);
-      if (value != null && !value.isEmpty()) {
-        result.add(value);
-      }
-    }
-    return result.toArray(EMPTY_STR_ARRAY);
-  }
-  
-  private static String[] toTypes(Collection<List<String>> lists) {
-    if (lists == null || lists.isEmpty()) {
-      return null;
-    }
-    List<String> result = new ArrayList<>(lists.size());
-    for (List<String> list : lists) {
-      String value = list.get(0);
-      if (value != null && !value.isEmpty()) {
-        String type = null;
-        for (int i = 1; i < list.size(); i++) {
-          String metadatum = list.get(i);
-          int equals = metadatum.indexOf('=');
-          if (equals < 0) {
-            // take the whole thing as a usable label
-            type = metadatum;
-            break;
-          }
-          if ("TYPE".equalsIgnoreCase(metadatum.substring(0, equals))) {
-            type = metadatum.substring(equals + 1);
-            break;
-          }
-        }
-        result.add(type);
-      }
-    }
-    return result.toArray(EMPTY_STR_ARRAY);
-  }
-
   private static boolean isLikeVCardDate(CharSequence value) {
     return value == null || VCARD_LIKE_DATE.matcher(value).matches();
   }

@@ -29,21 +29,36 @@ import com.google.zxing.DecodeHintType;
  * @author Alex Dupre
  */
 public final class StringUtils {
-
+  
   private static final Charset PLATFORM_DEFAULT_ENCODING = Charset.defaultCharset();
   public static final Charset SHIFT_JIS_CHARSET = Charset.forName("SJIS");
   public static final Charset GB2312_CHARSET = Charset.forName("GB2312");
   private static final Charset EUC_JP = Charset.forName("EUC_JP");
   private static final boolean ASSUME_SHIFT_JIS =
-      SHIFT_JIS_CHARSET.equals(PLATFORM_DEFAULT_ENCODING) ||
-      EUC_JP.equals(PLATFORM_DEFAULT_ENCODING);
-
+  SHIFT_JIS_CHARSET.equals(PLATFORM_DEFAULT_ENCODING) ||
+  EUC_JP.equals(PLATFORM_DEFAULT_ENCODING);
+  
   // Retained for ABI compatibility with earlier versions
   public static final String SHIFT_JIS = "SJIS";
   public static final String GB2312 = "GB2312";
-
+  
+  private static boolean canBeISO88591 = true;
+  private static boolean canBeShiftJIS = true;
+  private static boolean canBeUTF8 = true;
+  private static int utf8BytesLeft = 0;
+  private static int utf2BytesChars = 0;
+  private static int utf3BytesChars = 0;
+  private static int utf4BytesChars = 0;
+  private static int sjisBytesLeft = 0;
+  private static int sjisKatakanaChars = 0;
+  private static int sjisCurKatakanaWordLength = 0;
+  private static int sjisCurDoubleBytesWordLength = 0;
+  private static int sjisMaxKatakanaWordLength = 0;
+  private static int sjisMaxDoubleBytesWordLength = 0;
+  private static int isoHighOther = 0;
+  
   private StringUtils() { }
-
+  
   /**
    * @param bytes bytes encoding a string, whose encoding should be guessed
    * @param hints decode hints if applicable
@@ -62,7 +77,7 @@ public final class StringUtils {
     }
     return c.name();
   }
-
+  
   /**
    * @param bytes bytes encoding a string, whose encoding should be guessed
    * @param hints decode hints if applicable
@@ -87,20 +102,7 @@ public final class StringUtils {
     // For now, merely tries to distinguish ISO-8859-1, UTF-8 and Shift_JIS,
     // which should be by far the most common encodings.
     int length = bytes.length;
-    boolean canBeISO88591 = true;
-    boolean canBeShiftJIS = true;
-    boolean canBeUTF8 = true;
-    int utf8BytesLeft = 0;
-    int utf2BytesChars = 0;
-    int utf3BytesChars = 0;
-    int utf4BytesChars = 0;
-    int sjisBytesLeft = 0;
-    int sjisKatakanaChars = 0;
-    int sjisCurKatakanaWordLength = 0;
-    int sjisCurDoubleBytesWordLength = 0;
-    int sjisMaxKatakanaWordLength = 0;
-    int sjisMaxDoubleBytesWordLength = 0;
-    int isoHighOther = 0;
+    
 
     boolean utf8bom = bytes.length > 3 &&
         bytes[0] == (byte) 0xEF &&
@@ -113,46 +115,9 @@ public final class StringUtils {
 
       int value = bytes[i] & 0xFF;
 
-      // UTF-8 stuff
-      if (canBeUTF8) {
-        if (utf8BytesLeft > 0) {
-          if ((value & 0x80) == 0) {
-            canBeUTF8 = false;
-          } else {
-            utf8BytesLeft--;
-          }
-        } else if ((value & 0x80) != 0) {
-          if ((value & 0x40) == 0) {
-            canBeUTF8 = false;
-          } else {
-            utf8BytesLeft++;
-            if ((value & 0x20) == 0) {
-              utf2BytesChars++;
-            } else {
-              utf8BytesLeft++;
-              if ((value & 0x10) == 0) {
-                utf3BytesChars++;
-              } else {
-                utf8BytesLeft++;
-                if ((value & 0x08) == 0) {
-                  utf4BytesChars++;
-                } else {
-                  canBeUTF8 = false;
-                }
-              }
-            }
-          }
-        }
-      }
+      utf8(value);
 
-      // ISO-8859-1 stuff
-      if (canBeISO88591) {
-        if (value > 0x7F && value < 0xA0) {
-          canBeISO88591 = false;
-        } else if (value > 0x9F && (value < 0xC0 || value == 0xD7 || value == 0xF7)) {
-          isoHighOther++;
-        }
-      }
+      ISO88591(value);
 
       // Shift_JIS stuff
       if (canBeShiftJIS) {
@@ -224,6 +189,51 @@ public final class StringUtils {
     }
     // Otherwise, we take a wild guess with platform encoding
     return PLATFORM_DEFAULT_ENCODING;
+  }
+
+  private static void ISO88591(int value) {
+    // ISO-8859-1 stuff
+    if (canBeISO88591) {
+      if (value > 0x7F && value < 0xA0) {
+        canBeISO88591 = false;
+      } else if (value > 0x9F && (value < 0xC0 || value == 0xD7 || value == 0xF7)) {
+        isoHighOther++;
+      }
+    }
+  }
+
+  private static void utf8(int value) {
+    // UTF-8 stuff
+    if (canBeUTF8) {
+      if (utf8BytesLeft > 0) {
+        if ((value & 0x80) == 0) {
+          canBeUTF8 = false;
+        } else {
+          utf8BytesLeft--;
+        }
+      } else if ((value & 0x80) != 0) {
+        if ((value & 0x40) == 0) {
+          canBeUTF8 = false;
+        } else {
+          utf8BytesLeft++;
+          if ((value & 0x20) == 0) {
+            utf2BytesChars++;
+          } else {
+            utf8BytesLeft++;
+            if ((value & 0x10) == 0) {
+              utf3BytesChars++;
+            } else {
+              utf8BytesLeft++;
+              if ((value & 0x08) == 0) {
+                utf4BytesChars++;
+              } else {
+                canBeUTF8 = false;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
 }

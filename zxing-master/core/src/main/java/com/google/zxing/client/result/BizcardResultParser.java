@@ -18,9 +18,6 @@ package com.google.zxing.client.result;
 
 import com.google.zxing.Result;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Implements the "BIZCARD" address book entry format, though this has been
  * largely reverse-engineered from examples observed in the wild -- still
@@ -42,7 +39,7 @@ public final class BizcardResultParser extends AbstractDoCoMoResultParser {
     }
     String firstName = matchSingleDoCoMoPrefixedField("N:", rawText, true);
     String lastName = matchSingleDoCoMoPrefixedField("X:", rawText, true);
-    String fullName = buildName(firstName, lastName);
+    String fullName = AddressBookParsedResult.buildName(firstName, lastName);
     String title = matchSingleDoCoMoPrefixedField("T:", rawText, true);
     String org = matchSingleDoCoMoPrefixedField("C:", rawText, true);
     String[] addresses = matchDoCoMoPrefixedField("A:", rawText);
@@ -54,7 +51,7 @@ public final class BizcardResultParser extends AbstractDoCoMoResultParser {
     return new AddressBookParsedResult(maybeWrap(fullName),
                                        null,
                                        null,
-                                       buildPhoneNumbers(phoneNumber1, phoneNumber2, phoneNumber3),
+                                       AddressBookParsedResult.buildPhoneNumbers(phoneNumber1, phoneNumber2, phoneNumber3),
                                        null,
                                        maybeWrap(email),
                                        null,
@@ -67,34 +64,6 @@ public final class BizcardResultParser extends AbstractDoCoMoResultParser {
                                        title,
                                        null,
                                        null);
-  }
-
-  private static String[] buildPhoneNumbers(String number1,
-                                            String number2,
-                                            String number3) {
-    List<String> numbers = new ArrayList<>(3);
-    if (number1 != null) {
-      numbers.add(number1);
-    }
-    if (number2 != null) {
-      numbers.add(number2);
-    }
-    if (number3 != null) {
-      numbers.add(number3);
-    }
-    int size = numbers.size();
-    if (size == 0) {
-      return null;
-    }
-    return numbers.toArray(new String[size]);
-  }
-
-  private static String buildName(String firstName, String lastName) {
-    if (firstName == null) {
-      return lastName;
-    } else {
-      return lastName == null ? firstName : firstName + ' ' + lastName;
-    }
   }
 
 }
